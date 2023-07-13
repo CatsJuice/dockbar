@@ -2,6 +2,7 @@ import fs from "fs"
 import { dirname, resolve } from "path"
 import { execa } from "execa"
 import { writeFile, readFile } from "fs/promises"
+import { execSync } from "child_process"
 import { fileURLToPath } from "url"
 import chalk from "chalk";
 import prompts from "prompts";
