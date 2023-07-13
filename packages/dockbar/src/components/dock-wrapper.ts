@@ -111,7 +111,7 @@ export class Dock extends LitElement {
       return
 
     this._children.forEach((child) => {
-      const childRect = child.getBoundingClientRect()
+      const childRect = child?.getBoundingClientRect() || {}
       const { left, top, width, height } = childRect
       const center
         = this.direction === 'horizontal' ? left + width / 2 : top + height / 2

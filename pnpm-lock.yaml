@@ -48,6 +48,47 @@ importers:
         specifier: ^0.53.5
         version: registry.npmmirror.com/unocss@0.53.5(postcss@8.4.25)(vite@4.4.3)
 
+  "examples/\x15vue":
+    dependencies:
+      vue:
+        specifier: ^3.3.4
+        version: registry.npmmirror.com/vue@3.3.4
+    devDependencies:
+      '@vitejs/plugin-vue':
+        specifier: ^4.2.3
+        version: registry.npmmirror.com/@vitejs/plugin-vue@4.2.3(vite@4.4.3)(vue@3.3.4)
+      typescript:
+        specifier: ^5.0.2
+        version: registry.npmmirror.com/typescript@5.1.6
+      vite:
+        specifier: ^4.4.0
+        version: registry.npmmirror.com/vite@4.4.3(@types/node@20.4.1)
+      vue-tsc:
+        specifier: ^1.8.3
+        version: registry.npmmirror.com/vue-tsc@1.8.4(typescript@5.1.6)
+
+  examples/vite-vue:
+    dependencies:
+      dockbar:
+        specifier: workspace:^
+        version: link:../..
+      vue:
+        specifier: ^3.3.4
+        version: registry.npmmirror.com/vue@3.3.4
+    devDependencies:
+      '@vitejs/plugin-vue':
+        specifier: ^4.2.3
+        version: registry.npmmirror.com/@vitejs/plugin-vue@4.2.3(vite@4.4.3)(vue@3.3.4)
+      typescript:
+        specifier: ^5.0.2
+        version: registry.npmmirror.com/typescript@5.1.6
+      vite:
+        specifier: ^4.4.0
+        version: registry.npmmirror.com/vite@4.4.3(@types/node@20.4.1)
+      vue-tsc:
+        specifier: ^1.8.3
+        version: registry.npmmirror.com/vue-tsc@1.8.4(typescript@5.1.6)
+
   packages/dockbar:
     dependencies:
       animejs:
@@ -3980,7 +4021,7 @@ packages:
       vite: ^4.0.0
       vue: ^3.2.25
     dependencies:
-      vite: registry.npmmirror.com/vite@4.4.3(@types/node@18.16.19)
+      vite: registry.npmmirror.com/vite@4.4.3(@types/node@20.4.1)
       vue: registry.npmmirror.com/vue@3.3.4
     dev: true
 
@@ -4608,7 +4649,7 @@ packages:
       typescript:
         optional: true
     dependencies:
-      '@volar/language-core': registry.npmmirror.com/@volar/language-core@1.8.0
+      '@volar/language-core': registry.npmmirror.com/@volar/language-core@1.8.1
       '@volar/source-map': registry.npmmirror.com/@volar/source-map@1.8.1
       '@vue/compiler-dom': registry.npmmirror.com/@vue/compiler-dom@3.3.4
       '@vue/reactivity': registry.npmmirror.com/@vue/reactivity@3.3.4
