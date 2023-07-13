@@ -12,6 +12,10 @@ export class Dock extends LitElement {
   private _active = false
   private _mousePos = { x: 0, y: 0 }
   private _moving = false
+  private _overflowed = false
+
+  @property({ type: Boolean })
+  disabled = false
 
   @property({ type: Number })
   maxRange = 200
@@ -46,6 +50,7 @@ export class Dock extends LitElement {
     this._children.forEach((element: any) => {
       element.style.setProperty('width', `${this.size}px`)
       element.style.setProperty('height', `${this.size}px`)
+      element.style.setProperty('flex-shrink', '0')
     })
     this.observe()
   }
@@ -66,6 +71,8 @@ export class Dock extends LitElement {
       'mouseleave',
       this.onMouseleave.bind(this),
     )
+    window.addEventListener('resize', this.onResize.bind(this))
+    this.onResize()
   }
 
   resetAll() {
@@ -77,6 +84,14 @@ export class Dock extends LitElement {
         duration: 100,
       })
     })
+  }
+
+  onResize() {
+    const side = this.direction === 'horizontal' ? 'right' : 'bottom'
+    const lastChildRight = (this.shadowRoot?.host?.lastChild as HTMLElement)?.getBoundingClientRect()?.[side]
+    const wrapperRight = this.shadowRoot?.host?.getBoundingClientRect()?.[side]
+    this._overflowed = !!wrapperRight && !!wrapperRight && lastChildRight > wrapperRight
+    this.renderRoot.querySelector('ul')?.classList?.toggle('overflowed', this._overflowed)
   }
 
   onMouseenter() {}
@@ -95,7 +110,7 @@ export class Dock extends LitElement {
     if (Math.abs(offset) <= 10)
       return
     const rect = this.shadowRoot?.host?.getBoundingClientRect()
-    if (!rect)
+    if (!rect || this.disabled || this._overflowed)
       return
     this._children.forEach((child) => {
       const childRect = child.getBoundingClientRect()
@@ -155,6 +170,11 @@ export class Dock extends LitElement {
     `
   }
 
+  updated(changedProperties: any) {
+    if (changedProperties.has('direction'))
+      setTimeout(this.onResize.bind(this))
+  }
+
   static styles = css`
     ul.dock-wrapper {
       box-sizing: border-box;
@@ -165,6 +185,7 @@ export class Dock extends LitElement {
       align-items: center;
       list-style: none;
       gap: var(--gap, 5px);
+      border-radius: inherit;
     }
     ul.dock-wrapper.horizontal.bottom {
       align-items: flex-end;
@@ -188,9 +209,17 @@ export class Dock extends LitElement {
     }
     ul.dock-wrapper.horizontal {
       flex-direction: row;
+      max-width: 80vw;
     }
     ul.dock-wrapper.vertical {
       flex-direction: column;
+      max-height: 90vh;
+    }
+    ul.dock-wrapper.horizontal.overflowed {
+      overflow-x: auto;
+    }
+    ul.dock-wrapper.vertical.overflowed {
+      overflow-y: auto;
     }
   `
 }
