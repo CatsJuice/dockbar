@@ -18,3 +18,9 @@ export class DockItem extends LitElement {
     }
   `
 }
+
+declare global {
+  interface HTMLElementTagNameMap {
+    'dock-item': DockItem
+  }
+}

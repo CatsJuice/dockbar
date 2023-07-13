@@ -6,7 +6,7 @@ export type DockPosition = 'top' | 'right' | 'bottom' | 'left'
 export type DockDirection = 'horizontal' | 'vertical'
 
 @customElement('dock-wrapper')
-export class Dock extends LitElement {
+export class DockWrapper extends LitElement {
   private _ready = false
   private _children: any[] = []
   private _mousePos = { x: 0, y: 0 }
@@ -222,6 +222,6 @@ export class Dock extends LitElement {
 
 declare global {
   interface HTMLElementTagNameMap {
-    'dock-wrapper': Dock
+    'dock-wrapper': DockWrapper
   }
 }

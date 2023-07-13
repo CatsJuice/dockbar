@@ -48,25 +48,6 @@ importers:
         specifier: ^0.53.5
         version: registry.npmmirror.com/unocss@0.53.5(postcss@8.4.25)(vite@4.4.3)
 
-  "examples/\x15vue":
-    dependencies:
-      vue:
-        specifier: ^3.3.4
-        version: registry.npmmirror.com/vue@3.3.4
-    devDependencies:
-      '@vitejs/plugin-vue':
-        specifier: ^4.2.3
-        version: registry.npmmirror.com/@vitejs/plugin-vue@4.2.3(vite@4.4.3)(vue@3.3.4)
-      typescript:
-        specifier: ^5.0.2
-        version: registry.npmmirror.com/typescript@5.1.6
-      vite:
-        specifier: ^4.4.0
-        version: registry.npmmirror.com/vite@4.4.3(@types/node@20.4.1)
-      vue-tsc:
-        specifier: ^1.8.3
-        version: registry.npmmirror.com/vue-tsc@1.8.4(typescript@5.1.6)
-
   examples/vite-vue:
     dependencies:
       dockbar:
