@@ -1,21 +1,35 @@
 {
   "name": "dockbar",
+  "type": "module",
   "version": "0.0.0",
   "description": "A macOS-like dock made with Web-Components",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "keywords": [],
   "author": "CatsJuice",
   "license": "MIT",
-  "simple-git-hooks": {
-    "pre-commit": "pnpm lint-staged"
+  "keywords": [],
+  "exports": {
+    ".": {
+      "types": "./dist/types/index.d.ts",
+      "import": "./dist/dockbar.js"
+    }
+  },
+  "main": "./dist/dockbar.js",
+  "module": "./dist/dockbar.js",
+  "types": "./dist/types/index.d.ts",
+  "scripts": {
+    "postinstall": "npx simple-git-hooks",
+    "dev": "cd packages/dockbar && pnpm dev",
+    "build": "cd packages/dockbar && pnpm build"
   },
   "devDependencies": {
     "@antfu/eslint-config": "^0.39.7",
     "eslint": "^8.44.0",
-    "lint-staged": "^13.2.3"
+    "lint-staged": "^13.2.3",
+    "rimraf": "^5.0.1",
+    "simple-git-hooks": "^2.8.1",
+    "unocss": "^0.53.5"
+  },
+  "simple-git-hooks": {
+    "pre-commit": "pnpm lint-staged"
   },
   "lint-staged": {
     "*": "eslint --fix"

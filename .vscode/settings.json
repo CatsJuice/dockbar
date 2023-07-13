@@ -1,0 +1,16 @@
+{
+  "cSpell.words": [
+    "animejs",
+    "dockbar",
+    "iife",
+    "nprogress",
+    "sizecheck",
+    "slotchange",
+    "taze",
+    "unhead"
+  ],
+  "i18n-ally.localesPaths": [
+    "packages/playground/locales"
+  ],
+  "prettier.enable": false
+}

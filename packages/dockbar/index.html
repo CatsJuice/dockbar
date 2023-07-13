@@ -6,11 +6,134 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Vite + Lit + TS</title>
     <link rel="stylesheet" href="./src/index.css" />
-    <script type="module" src="/src/my-element.ts"></script>
+    <script type="module" src="./src/components/dock-wrapper.ts"></script>
+    <script type="module" src="./src/components/dock-item.ts"></script>
+
+    <style>
+      :root {
+        --colors-gray1: hsl(0 0% 99.0%);
+        --colors-gray2: hsl(0 0% 97.3%);
+        --colors-gray3: hsl(0 0% 95.1%);
+        --colors-gray4: hsl(0 0% 93.0%);
+        --colors-gray5: hsl(0 0% 90.9%);
+        --colors-gray6: hsl(0 0% 88.7%);
+        --colors-gray7: hsl(0 0% 85.8%);
+        --colors-gray8: hsl(0 0% 78.0%);
+        --colors-gray9: hsl(0 0% 56.1%);
+        --colors-gray10: hsl(0 0% 52.3%);
+        --colors-gray11: hsl(0 0% 43.5%);
+        --colors-gray12: hsl(0 0% 9.0%);
+        --colors-grayA1: hsl(0 0% 0% / 0.012);
+        --colors-grayA2: hsl(0 0% 0% / 0.027);
+        --colors-grayA3: hsl(0 0% 0% / 0.047);
+        --colors-grayA4: hsl(0 0% 0% / 0.071);
+        --colors-grayA5: hsl(0 0% 0% / 0.090);
+        --colors-grayA6: hsl(0 0% 0% / 0.114);
+        --colors-grayA7: hsl(0 0% 0% / 0.141);
+        --colors-grayA8: hsl(0 0% 0% / 0.220);
+        --colors-grayA9: hsl(0 0% 0% / 0.439);
+        --colors-grayA10: hsl(0 0% 0% / 0.478);
+        --colors-grayA11: hsl(0 0% 0% / 0.565);
+        --colors-grayA12: hsl(0 0% 0% / 0.910);
+        --colors-bg: #FFF;
+        --colors-lowContrast: #FFFFFF;
+        --colors-highContrast: black;
+        --gradient-color-1: var(--colors-gray2);
+        --gradient-color-2: var(--colors-gray5);
+        --shadows-large: 0 30px 60px rgba(0, 0, 0, 0.12);
+      }
+  
+      .my-item {
+        border-radius: 50%;
+        background-image: linear-gradient(45deg, var(--gradient-color-1), var(--gradient-color-2), var(--gradient-color-1), var(--gradient-color-2));
+        background-size: 200% 100%;
+      }
+      #glass {
+        position: fixed;
+        left: 50%;
+        transform: translateX(-50%);
+        bottom: 20px;
+        height: 56px;
+        box-sizing: border-box;
+  
+        padding-left: 8px;
+        padding-right: 8px;
+        padding-bottom: 8px;
+        display: flex;
+        align-items: flex-end;
+        background: rgba(255, 255, 255, 0.7);
+        box-shadow: var(--shadows-large);
+        backdrop-filter: blur(100px) saturate(400%) brightness(100%);
+        border: 1px solid var(--colors-grayA4);
+        bottom: 10px;
+        left: 50%;
+        border-radius: 9999px;
+        z-index: 10;
+        animation: 500ms ease 200ms 1 normal forwards running k-PnvVd;
+      }
+      .full {
+        width: 100%;
+        height: 100%;
+      }
+      .flex-center {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+    </style>
   </head>
   <body>
-    <my-element>
-      <h1>Vite + Lit</h1>
-    </my-element>
+    <button id="toggleDirection">Change direction</button>
+    <button id="togglePosition">Change Position</button>
+  
+    <div id="glass">
+      <dock-wrapper id="dock"></dock-wrapper>
+    </div>
+  
+    <script>
+      const $id = id => document.getElementById(id)
+      // const $class = className => document.getElementsByClassName(className)
+      const toggleDirection = $id('toggleDirection')
+      const togglePosition = $id('togglePosition')
+      const dock = $id('dock')
+
+      const fragment = document.createDocumentFragment()
+      for (let i = 0; i < 10; i++) {
+        const dockItem = document.createElement('dock-item')
+        const div = document.createElement('div')
+        div.classList.add('my-item')
+        div.classList.add('full')
+        div.classList.add('flex-center')
+        div.innerText = `${i}`
+        dockItem.appendChild(div)
+
+        fragment.appendChild(dockItem)
+      }
+      dock.appendChild(fragment)
+
+      const directions = [
+        'horizontal',
+        'vertical',
+      ]
+      const positions = [
+        'bottom',
+        'top',
+        'right',
+        'left',
+      ]
+      const current = {
+        direction: 0,
+        position: 0,
+      }
+
+      toggleDirection.addEventListener('click', () => {
+        current.direction = (current.direction + 1) % directions.length
+        dock.setAttribute('direction', directions[current.direction])
+      })
+      togglePosition.addEventListener('click', () => {
+        current.position = (current.position + 1) % positions.length
+        dock.setAttribute('position', positions[current.position])
+      })
+    </script>
   </body>
 </html>

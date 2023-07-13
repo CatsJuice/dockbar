@@ -13,7 +13,6 @@
     "test:unit": "vitest",
     "typecheck": "vue-tsc --noEmit",
     "up": "taze major -I",
-    "postinstall": "npx simple-git-hooks",
     "sizecheck": "npx vite-bundle-visualizer"
   },
   "dependencies": {
@@ -46,7 +45,6 @@
     "markdown-it-shiki": "^0.9.0",
     "pnpm": "^8.6.7",
     "shiki": "^0.14.3",
-    "simple-git-hooks": "^2.8.1",
     "taze": "^0.11.2",
     "typescript": "^5.1.6",
     "unocss": "^0.53.5",

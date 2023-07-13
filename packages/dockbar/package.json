@@ -1,17 +1,19 @@
 {
-  "name": "dockit",
-  "private": true,
-  "version": "0.0.0",
+  "name": "dockbar",
   "type": "module",
+  "version": "0.0.0",
+  "private": true,
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build",
+    "build": "rimraf ../../dist && tsc --emitDeclarationOnly --noEmit false && vite build",
     "preview": "vite preview"
   },
   "dependencies": {
+    "animejs": "^3.2.1",
     "lit": "^2.7.5"
   },
   "devDependencies": {
+    "@types/animejs": "^3.1.7",
     "typescript": "^5.0.2",
     "vite": "^4.4.0"
   }

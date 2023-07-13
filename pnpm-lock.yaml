@@ -17,13 +17,28 @@ importers:
       lint-staged:
         specifier: ^13.2.3
         version: registry.npmmirror.com/lint-staged@13.2.3
+      rimraf:
+        specifier: ^5.0.1
+        version: registry.npmmirror.com/rimraf@5.0.1
+      simple-git-hooks:
+        specifier: ^2.8.1
+        version: registry.npmmirror.com/simple-git-hooks@2.8.1
+      unocss:
+        specifier: ^0.53.5
+        version: registry.npmmirror.com/unocss@0.53.5(postcss@8.4.25)(vite@4.4.3)
 
   packages/dockbar:
     dependencies:
+      animejs:
+        specifier: ^3.2.1
+        version: registry.npmmirror.com/animejs@3.2.1
       lit:
         specifier: ^2.7.5
         version: registry.npmmirror.com/lit@2.7.5
     devDependencies:
+      '@types/animejs':
+        specifier: ^3.1.7
+        version: registry.npmmirror.com/@types/animejs@3.1.7
       typescript:
         specifier: ^5.0.2
         version: registry.npmmirror.com/typescript@5.1.6
@@ -48,9 +63,6 @@ importers:
       nprogress:
         specifier: ^0.2.0
         version: registry.npmmirror.com/nprogress@0.2.0
-      pinia:
-        specifier: ^2.1.4
-        version: registry.npmmirror.com/pinia@2.1.4(typescript@5.1.6)(vue@3.3.4)
       vue:
         specifier: ^3.3.4
         version: registry.npmmirror.com/vue@3.3.4
@@ -118,9 +130,6 @@ importers:
       shiki:
         specifier: ^0.14.3
         version: registry.npmmirror.com/shiki@0.14.3
-      simple-git-hooks:
-        specifier: ^2.8.1
-        version: registry.npmmirror.com/simple-git-hooks@2.8.1
       taze:
         specifier: ^0.11.2
         version: registry.npmmirror.com/taze@0.11.2
@@ -3229,6 +3238,12 @@ packages:
       minimatch: registry.npmmirror.com/minimatch@9.0.3
     dev: true
 
+  registry.npmmirror.com/@types/animejs@3.1.7:
+    resolution: {integrity: sha512-kFSyjM+fLo3oE9noWEtUvF82ttN8fTrKohiEMIrSzEzEjnsCmtO0rBCUQBlSPEb2w8vfN+v4/Zo0tK21Bgmq4g==, registry: https://registry.npm.taobao.org/, tarball: https://registry.npmmirror.com/@types/animejs/-/animejs-3.1.7.tgz}
+    name: '@types/animejs'
+    version: 3.1.7
+    dev: true
+
   registry.npmmirror.com/@types/chai-subset@1.3.3:
     resolution: {integrity: sha512-frBecisrNGz+F4T6bcc+NLeolfiojh5FxW2klu669+8BARtyQv2C/GkNW6FUodVe4BroGMP/wER/YDGc7rEllw==, registry: https://registry.npm.taobao.org/, tarball: https://registry.npmmirror.com/@types/chai-subset/-/chai-subset-1.3.3.tgz}
     name: '@types/chai-subset'
@@ -3347,7 +3362,7 @@ packages:
     name: '@types/resolve'
     version: 1.17.1
     dependencies:
-      '@types/node': registry.npmmirror.com/@types/node@18.16.19
+      '@types/node': registry.npmmirror.com/@types/node@20.4.1
     dev: true
 
   registry.npmmirror.com/@types/semver@7.5.0:
@@ -3605,6 +3620,44 @@ packages:
       - vite
     dev: true
 
+  registry.npmmirror.com/@unocss/astro@0.53.5(vite@4.4.3):
+    resolution: {integrity: sha512-W4A0uIN4xAzVH6Vwf5ukG8rJpCeIwQZcpZPrEBWsqY5YcHZcLTFGMHcNmxyeG0qoXpXoxtvHyXXhgGU0BY5ZEw==, registry: https://registry.npm.taobao.org/, tarball: https://registry.npmmirror.com/@unocss/astro/-/astro-0.53.5.tgz}
+    id: registry.npmmirror.com/@unocss/astro/0.53.5
+    name: '@unocss/astro'
+    version: 0.53.5
+    dependencies:
+      '@unocss/core': registry.npmmirror.com/@unocss/core@0.53.5
+      '@unocss/reset': registry.npmmirror.com/@unocss/reset@0.53.5
+      '@unocss/vite': registry.npmmirror.com/@unocss/vite@0.53.5(vite@4.4.3)
+    transitivePeerDependencies:
+      - rollup
+      - vite
+    dev: true
+
+  registry.npmmirror.com/@unocss/cli@0.53.5:
+    resolution: {integrity: sha512-UKi+9BAKh3X5eM4pPQviXMOtN8JkQWKdGy/056rRLQysPB07VBwWr5gYAlJMMJ2wFAIthag43X5I8btQAicFkg==, registry: https://registry.npm.taobao.org/, tarball: https://registry.npmmirror.com/@unocss/cli/-/cli-0.53.5.tgz}
+    name: '@unocss/cli'
+    version: 0.53.5
+    engines: {node: '>=14'}
+    hasBin: true
+    dependencies:
+      '@ampproject/remapping': registry.npmmirror.com/@ampproject/remapping@2.2.1
+      '@rollup/pluginutils': registry.npmmirror.com/@rollup/pluginutils@5.0.2(rollup@3.26.2)
+      '@unocss/config': registry.npmmirror.com/@unocss/config@0.53.5
+      '@unocss/core': registry.npmmirror.com/@unocss/core@0.53.5
+      '@unocss/preset-uno': registry.npmmirror.com/@unocss/preset-uno@0.53.5
+      cac: registry.npmmirror.com/cac@6.7.14
+      chokidar: registry.npmmirror.com/chokidar@3.5.3
+      colorette: registry.npmmirror.com/colorette@2.0.20
+      consola: registry.npmmirror.com/consola@3.2.3
+      fast-glob: registry.npmmirror.com/fast-glob@3.3.0
+      magic-string: registry.npmmirror.com/magic-string@0.30.1
+      pathe: registry.npmmirror.com/pathe@1.1.1
+      perfect-debounce: registry.npmmirror.com/perfect-debounce@1.0.0
+    transitivePeerDependencies:
+      - rollup
+    dev: true
+
   registry.npmmirror.com/@unocss/cli@0.53.5(rollup@2.79.1):
     resolution: {integrity: sha512-UKi+9BAKh3X5eM4pPQviXMOtN8JkQWKdGy/056rRLQysPB07VBwWr5gYAlJMMJ2wFAIthag43X5I8btQAicFkg==, registry: https://registry.npm.taobao.org/, tarball: https://registry.npmmirror.com/@unocss/cli/-/cli-0.53.5.tgz}
     id: registry.npmmirror.com/@unocss/cli/0.53.5
@@ -3857,6 +3910,29 @@ packages:
       fast-glob: registry.npmmirror.com/fast-glob@3.3.0
       magic-string: registry.npmmirror.com/magic-string@0.30.1
       vite: registry.npmmirror.com/vite@4.4.3(@types/node@18.16.19)
+    transitivePeerDependencies:
+      - rollup
+    dev: true
+
+  registry.npmmirror.com/@unocss/vite@0.53.5(vite@4.4.3):
+    resolution: {integrity: sha512-ez0MVRatewLUQq79LI+XRAVRbXWaGbK1K1ht2B8vGyL9OrL6uieEwzxjHV7+rUa8i+FEHfD4Ntmtdpb3WuQSAA==, registry: https://registry.npm.taobao.org/, tarball: https://registry.npmmirror.com/@unocss/vite/-/vite-0.53.5.tgz}
+    id: registry.npmmirror.com/@unocss/vite/0.53.5
+    name: '@unocss/vite'
+    version: 0.53.5
+    peerDependencies:
+      vite: ^2.9.0 || ^3.0.0-0 || ^4.0.0
+    dependencies:
+      '@ampproject/remapping': registry.npmmirror.com/@ampproject/remapping@2.2.1
+      '@rollup/pluginutils': registry.npmmirror.com/@rollup/pluginutils@5.0.2(rollup@3.26.2)
+      '@unocss/config': registry.npmmirror.com/@unocss/config@0.53.5
+      '@unocss/core': registry.npmmirror.com/@unocss/core@0.53.5
+      '@unocss/inspector': registry.npmmirror.com/@unocss/inspector@0.53.5
+      '@unocss/scope': registry.npmmirror.com/@unocss/scope@0.53.5
+      '@unocss/transformer-directives': registry.npmmirror.com/@unocss/transformer-directives@0.53.5
+      chokidar: registry.npmmirror.com/chokidar@3.5.3
+      fast-glob: registry.npmmirror.com/fast-glob@3.3.0
+      magic-string: registry.npmmirror.com/magic-string@0.30.1
+      vite: registry.npmmirror.com/vite@4.4.3(@types/node@20.4.1)
     transitivePeerDependencies:
       - rollup
     dev: true
@@ -4862,6 +4938,12 @@ packages:
       '@algolia/requester-node-http': registry.npmmirror.com/@algolia/requester-node-http@4.18.0
       '@algolia/transporter': registry.npmmirror.com/@algolia/transporter@4.18.0
     dev: true
+
+  registry.npmmirror.com/animejs@3.2.1:
+    resolution: {integrity: sha512-sWno3ugFryK5nhiDm/2BKeFCpZv7vzerWUcUPyAZLDhMek3+S/p418ldZJbJXo5ZUOpfm2kP2XRO4NJcULMy9A==, registry: https://registry.npm.taobao.org/, tarball: https://registry.npmmirror.com/animejs/-/animejs-3.2.1.tgz}
+    name: animejs
+    version: 3.2.1
+    dev: false
 
   registry.npmmirror.com/ansi-colors@4.1.3:
     resolution: {integrity: sha512-/6w/C21Pm1A7aZitlI5Ni/2J6FFQN8i1Cvz3kHABAAbw93v/NlvKdVOqz7CCWz/3iv/JplRSEEZ83XION15ovw==, registry: https://registry.npm.taobao.org/, tarball: https://registry.npmmirror.com/ansi-colors/-/ansi-colors-4.1.3.tgz}
@@ -6764,7 +6846,7 @@ packages:
     dependencies:
       debug: registry.npmmirror.com/debug@3.2.7(supports-color@8.1.1)
       is-core-module: registry.npmmirror.com/is-core-module@2.12.1
-      resolve: registry.npmmirror.com/resolve@1.22.3
+      resolve: registry.npmmirror.com/resolve@1.22.2
     transitivePeerDependencies:
       - supports-color
     dev: true
@@ -8828,7 +8910,7 @@ packages:
     version: 26.6.2
     engines: {node: '>= 10.13.0'}
     dependencies:
-      '@types/node': registry.npmmirror.com/@types/node@18.16.19
+      '@types/node': registry.npmmirror.com/@types/node@20.4.1
       merge-stream: registry.npmmirror.com/merge-stream@2.0.0
       supports-color: registry.npmmirror.com/supports-color@7.2.0
     dev: true
@@ -10519,27 +10601,6 @@ packages:
     engines: {node: '>=0.10.0'}
     dev: true
 
-  registry.npmmirror.com/pinia@2.1.4(typescript@5.1.6)(vue@3.3.4):
-    resolution: {integrity: sha512-vYlnDu+Y/FXxv1ABo1vhjC+IbqvzUdiUC3sfDRrRyY2CQSrqqaa+iiHmqtARFxJVqWQMCJfXx1PBvFs9aJVLXQ==, registry: https://registry.npm.taobao.org/, tarball: https://registry.npmmirror.com/pinia/-/pinia-2.1.4.tgz}
-    id: registry.npmmirror.com/pinia/2.1.4
-    name: pinia
-    version: 2.1.4
-    peerDependencies:
-      '@vue/composition-api': ^1.4.0
-      typescript: '>=4.4.4'
-      vue: ^2.6.14 || ^3.3.0
-    peerDependenciesMeta:
-      '@vue/composition-api':
-        optional: true
-      typescript:
-        optional: true
-    dependencies:
-      '@vue/devtools-api': registry.npmmirror.com/@vue/devtools-api@6.5.0
-      typescript: registry.npmmirror.com/typescript@5.1.6
-      vue: registry.npmmirror.com/vue@3.3.4
-      vue-demi: registry.npmmirror.com/vue-demi@0.14.5(vue@3.3.4)
-    dev: false
-
   registry.npmmirror.com/pkg-types@1.0.3:
     resolution: {integrity: sha512-nN7pYi0AQqJnoLPC9eHFQ8AcyaixBUOwvqc5TDnIKCMEE6I0y8P7OKA7fPexsXGCGxQDl/cmrLAp26LhcwxZ4A==, registry: https://registry.npm.taobao.org/, tarball: https://registry.npmmirror.com/pkg-types/-/pkg-types-1.0.3.tgz}
     name: pkg-types
@@ -11176,6 +11237,16 @@ packages:
     hasBin: true
     dependencies:
       glob: registry.npmmirror.com/glob@7.2.3
+    dev: true
+
+  registry.npmmirror.com/rimraf@5.0.1:
+    resolution: {integrity: sha512-OfFZdwtd3lZ+XZzYP/6gTACubwFcHdLRqS9UX3UwpU2dnGQYkPFISRwvM3w9IiB2w7bW5qGo/uAwE4SmXXSKvg==, registry: https://registry.npm.taobao.org/, tarball: https://registry.npmmirror.com/rimraf/-/rimraf-5.0.1.tgz}
+    name: rimraf
+    version: 5.0.1
+    engines: {node: '>=14'}
+    hasBin: true
+    dependencies:
+      glob: registry.npmmirror.com/glob@10.3.3
     dev: true
 
   registry.npmmirror.com/rollup-plugin-terser@7.0.2(rollup@2.79.1):
@@ -12349,6 +12420,7 @@ packages:
     version: 5.1.6
     engines: {node: '>=14.17'}
     hasBin: true
+    dev: true
 
   registry.npmmirror.com/uc.micro@1.0.6:
     resolution: {integrity: sha512-8Y75pvTYkLJW2hWQHXxoqRgV7qb9B+9vFEtidML+7koHUFapnVJAZ6cKs+Qjz5Aw3aZWHMC6u0wJE3At+nSGwA==, registry: https://registry.npm.taobao.org/, tarball: https://registry.npmmirror.com/uc.micro/-/uc.micro-1.0.6.tgz}
@@ -12534,6 +12606,45 @@ packages:
       '@unocss/transformer-directives': registry.npmmirror.com/@unocss/transformer-directives@0.53.5
       '@unocss/transformer-variant-group': registry.npmmirror.com/@unocss/transformer-variant-group@0.53.5
       '@unocss/vite': registry.npmmirror.com/@unocss/vite@0.53.5(rollup@2.79.1)(vite@4.4.3)
+    transitivePeerDependencies:
+      - postcss
+      - rollup
+      - supports-color
+      - vite
+    dev: true
+
+  registry.npmmirror.com/unocss@0.53.5(postcss@8.4.25)(vite@4.4.3):
+    resolution: {integrity: sha512-LXAdtzAaH8iEDWxW4t9i6TvJNw0OSrgdN+jw8rAZAWb73Nx51ZLoKPUB1rFvQMr2Li7LcsUj5hYpOrQbhhafYg==, registry: https://registry.npm.taobao.org/, tarball: https://registry.npmmirror.com/unocss/-/unocss-0.53.5.tgz}
+    id: registry.npmmirror.com/unocss/0.53.5
+    name: unocss
+    version: 0.53.5
+    engines: {node: '>=14'}
+    peerDependencies:
+      '@unocss/webpack': 0.53.5
+    peerDependenciesMeta:
+      '@unocss/webpack':
+        optional: true
+    dependencies:
+      '@unocss/astro': registry.npmmirror.com/@unocss/astro@0.53.5(vite@4.4.3)
+      '@unocss/cli': registry.npmmirror.com/@unocss/cli@0.53.5
+      '@unocss/core': registry.npmmirror.com/@unocss/core@0.53.5
+      '@unocss/extractor-arbitrary-variants': registry.npmmirror.com/@unocss/extractor-arbitrary-variants@0.53.5
+      '@unocss/postcss': registry.npmmirror.com/@unocss/postcss@0.53.5(postcss@8.4.25)
+      '@unocss/preset-attributify': registry.npmmirror.com/@unocss/preset-attributify@0.53.5
+      '@unocss/preset-icons': registry.npmmirror.com/@unocss/preset-icons@0.53.5
+      '@unocss/preset-mini': registry.npmmirror.com/@unocss/preset-mini@0.53.5
+      '@unocss/preset-tagify': registry.npmmirror.com/@unocss/preset-tagify@0.53.5
+      '@unocss/preset-typography': registry.npmmirror.com/@unocss/preset-typography@0.53.5
+      '@unocss/preset-uno': registry.npmmirror.com/@unocss/preset-uno@0.53.5
+      '@unocss/preset-web-fonts': registry.npmmirror.com/@unocss/preset-web-fonts@0.53.5
+      '@unocss/preset-wind': registry.npmmirror.com/@unocss/preset-wind@0.53.5
+      '@unocss/reset': registry.npmmirror.com/@unocss/reset@0.53.5
+      '@unocss/transformer-attributify-jsx': registry.npmmirror.com/@unocss/transformer-attributify-jsx@0.53.5
+      '@unocss/transformer-attributify-jsx-babel': registry.npmmirror.com/@unocss/transformer-attributify-jsx-babel@0.53.5
+      '@unocss/transformer-compile-class': registry.npmmirror.com/@unocss/transformer-compile-class@0.53.5
+      '@unocss/transformer-directives': registry.npmmirror.com/@unocss/transformer-directives@0.53.5
+      '@unocss/transformer-variant-group': registry.npmmirror.com/@unocss/transformer-variant-group@0.53.5
+      '@unocss/vite': registry.npmmirror.com/@unocss/vite@0.53.5(vite@4.4.3)
     transitivePeerDependencies:
       - postcss
       - rollup

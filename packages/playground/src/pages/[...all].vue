@@ -7,8 +7,3 @@ const { t } = useI18n()
     {{ t('not-found') }}
   </div>
 </template>
-
-<route lang="yaml">
-meta:
-  layout: 404
-</route>
