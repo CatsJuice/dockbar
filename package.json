@@ -1,0 +1,23 @@
+{
+  "name": "dockbar",
+  "version": "0.0.0",
+  "description": "A macOS-like dock made with Web-Components",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "CatsJuice",
+  "license": "MIT",
+  "simple-git-hooks": {
+    "pre-commit": "pnpm lint-staged"
+  },
+  "devDependencies": {
+    "@antfu/eslint-config": "^0.39.7",
+    "eslint": "^8.44.0",
+    "lint-staged": "^13.2.3"
+  },
+  "lint-staged": {
+    "*": "eslint --fix"
+  }
+}
