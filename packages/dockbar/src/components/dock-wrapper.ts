@@ -9,7 +9,6 @@ export type DockDirection = 'horizontal' | 'vertical'
 export class Dock extends LitElement {
   private _ready = false
   private _children: any[] = []
-  private _active = false
   private _mousePos = { x: 0, y: 0 }
   private _moving = false
   private _overflowed = false
@@ -82,6 +81,7 @@ export class Dock extends LitElement {
         width: `${this.size}px`,
         height: `${this.size}px`,
         duration: 100,
+        easing: 'cubicBezier(0.33, 1, 0.68, 1)',
       })
     })
   }
@@ -97,10 +97,6 @@ export class Dock extends LitElement {
   onMouseenter() {}
   onMouseleave() {
     this.resetAll()
-    this._active = false
-    setTimeout(() => {
-      this._active = false
-    }, 100)
   }
 
   onMousemove(e: any) {
@@ -109,9 +105,11 @@ export class Dock extends LitElement {
     const offset = this.direction === 'horizontal' ? clientX - x : clientY - y
     if (Math.abs(offset) <= 10)
       return
+
     const rect = this.shadowRoot?.host?.getBoundingClientRect()
     if (!rect || this.disabled || this._overflowed)
       return
+
     this._children.forEach((child) => {
       const childRect = child.getBoundingClientRect()
       const { left, top, width, height } = childRect
@@ -128,11 +126,9 @@ export class Dock extends LitElement {
         targets: child,
         width: `${this.size * scale}px`,
         height: `${this.size * scale}px`,
-        duration: this._active ? 100 : 100,
+        duration: 100,
+        easing: 'cubicBezier(0.33, 1, 0.68, 1)',
       })
-      setTimeout(() => {
-        this._active = true
-      }, 100)
     })
   }
 
