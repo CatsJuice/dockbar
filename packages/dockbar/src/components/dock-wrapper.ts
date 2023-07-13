@@ -5,6 +5,8 @@ import anime from 'animejs/lib/anime.es.js'
 export type DockPosition = 'top' | 'right' | 'bottom' | 'left'
 export type DockDirection = 'horizontal' | 'vertical'
 
+const isServer = typeof globalThis.window === 'undefined' && typeof globalThis.document === 'undefined'
+
 @customElement('dock-wrapper')
 export class DockWrapper extends LitElement {
   private _ready = false
@@ -54,8 +56,25 @@ export class DockWrapper extends LitElement {
     this.observe()
   }
 
+  disconnectedCallback(): void {
+    super.disconnectedCallback()
+    this.shadowRoot?.host?.removeEventListener(
+      'mousemove',
+      this.onMousemove.bind(this),
+    )
+    this.shadowRoot?.host?.removeEventListener(
+      'mouseenter',
+      this.onMouseenter.bind(this),
+    )
+    this.shadowRoot?.host?.removeEventListener(
+      'mouseleave',
+      this.onMouseleave.bind(this),
+    )
+    window.removeEventListener('resize', this.onResize.bind(this))
+  }
+
   observe() {
-    if (this._ready)
+    if (this._ready || isServer)
       return
     this._ready = true
     this.shadowRoot?.host?.addEventListener(
