@@ -18,13 +18,23 @@
   "scripts": {
     "postinstall": "npx simple-git-hooks",
     "dev": "cd packages/dockbar && pnpm dev",
-    "build": "cd packages/dockbar && pnpm build"
+    "build:dockbar": "cd packages/dockbar && pnpm build",
+    "build:playground": "cd packages/playground && pnpm build",
+    "build": "node ./.build.mjs",
+    "publish": "node ./.build.mjs --publish"
   },
   "devDependencies": {
     "@antfu/eslint-config": "^0.39.7",
+    "brotli-size": "^4.0.0",
+    "bumpp": "^9.1.1",
+    "chalk": "^5.3.0",
     "eslint": "^8.44.0",
+    "execa": "^7.1.1",
     "lint-staged": "^13.2.3",
+    "pretty-bytes": "^6.1.0",
+    "prompts": "^2.4.2",
     "rimraf": "^5.0.1",
+    "shx": "^0.3.4",
     "simple-git-hooks": "^2.8.1",
     "unocss": "^0.53.5"
   },
