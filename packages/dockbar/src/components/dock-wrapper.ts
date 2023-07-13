@@ -29,6 +29,9 @@ export class Dock extends LitElement {
   size = 40
 
   @property({ type: Number })
+  padding = 8
+
+  @property({ type: Number })
   gap = 5
 
   constructor() {
@@ -43,8 +46,6 @@ export class Dock extends LitElement {
     this._children.forEach((element: any) => {
       element.style.setProperty('width', `${this.size}px`)
       element.style.setProperty('height', `${this.size}px`)
-      element.style.setProperty('position', 'relative')
-      element.style.setProperty('top', '0')
     })
     this.observe()
   }
@@ -133,17 +134,13 @@ export class Dock extends LitElement {
     return names.join(' ')
   }
 
-  get cssVars() {
+  get wrapperStyle() {
+    const hOrW = this.direction === 'horizontal' ? 'height' : 'width'
     const styles = {
       '--gap': `${this.gap}px`,
       '--size': `${this.size}px`,
-      '--origin':
-        {
-          left: 'left center',
-          right: 'right center',
-          top: 'center top',
-          bottom: 'center bottom',
-        }[this.position] || 'center',
+      'padding': `${this.padding}px`,
+      [hOrW]: `${this.padding * 2 + this.size}px`,
     }
     return Object.entries(styles)
       .map(([key, value]) => `${key}: ${value}`)
@@ -152,7 +149,7 @@ export class Dock extends LitElement {
 
   render() {
     return html`
-      <ul class=${this.className} .style=${this.cssVars}>
+      <ul class=${this.className} .style=${this.wrapperStyle}>
         <slot @slotchange=${this.onSlotChange}></slot>
       </ul>
     `
@@ -160,13 +157,26 @@ export class Dock extends LitElement {
 
   static styles = css`
     ul.dock-wrapper {
+      box-sizing: border-box;
       margin: 0;
       padding: 0;
       display: flex;
       flex-wrap: nowrap;
+      align-items: center;
       list-style: none;
-      align-items: flex-end;
       gap: var(--gap, 5px);
+    }
+    ul.dock-wrapper.horizontal.bottom {
+      align-items: flex-end;
+    }
+    ul.dock-wrapper.horizontal.top {
+      align-items: flex-start;
+    }
+    ul.dock-wrapper.vertical.left {
+      align-items: flex-start;
+    }
+    ul.dock-wrapper.vertical.right {
+      align-items: flex-end;
     }
     ul.dock-wrapper.left,
     ul.dock-wrapper.right {

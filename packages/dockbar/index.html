@@ -48,19 +48,10 @@
         background-image: linear-gradient(45deg, var(--gradient-color-1), var(--gradient-color-2), var(--gradient-color-1), var(--gradient-color-2));
         background-size: 200% 100%;
       }
-      #glass {
+      .glass {
         position: fixed;
-        left: 50%;
         transform: translateX(-50%);
         bottom: 20px;
-        height: 56px;
-        box-sizing: border-box;
-  
-        padding-left: 8px;
-        padding-right: 8px;
-        padding-bottom: 8px;
-        display: flex;
-        align-items: flex-end;
         background: rgba(255, 255, 255, 0.7);
         box-shadow: var(--shadows-large);
         backdrop-filter: blur(100px) saturate(400%) brightness(100%);
@@ -69,7 +60,6 @@
         left: 50%;
         border-radius: 9999px;
         z-index: 10;
-        animation: 500ms ease 200ms 1 normal forwards running k-PnvVd;
       }
       .full {
         width: 100%;
@@ -83,12 +73,11 @@
     </style>
   </head>
   <body>
-    <button id="toggleDirection">Change direction</button>
-    <button id="togglePosition">Change Position</button>
+    <button id="toggleDirection">Change direction(horizontal)</button>
+    <button id="togglePosition">Change Position(bottom)</button>
   
-    <div id="glass">
-      <dock-wrapper id="dock"></dock-wrapper>
-    </div>
+
+    <dock-wrapper class="glass" id="dock"></dock-wrapper>
   
     <script>
       const $id = id => document.getElementById(id)
@@ -129,10 +118,12 @@
       toggleDirection.addEventListener('click', () => {
         current.direction = (current.direction + 1) % directions.length
         dock.setAttribute('direction', directions[current.direction])
+        toggleDirection.innerText = `Change direction(${directions[current.direction]})`
       })
       togglePosition.addEventListener('click', () => {
         current.position = (current.position + 1) % positions.length
         dock.setAttribute('position', positions[current.position])
+        togglePosition.innerText = `Change position(${positions[current.position]})`
       })
     </script>
   </body>
