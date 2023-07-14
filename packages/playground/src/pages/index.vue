@@ -2,7 +2,7 @@
 defineOptions({
   name: 'IndexPage',
 })
-
+const Dock = defineAsyncComponent(() => import('~/components/Dock.vue'))
 const paneCon = ref<HTMLElement>()
 
 onMounted(() => {
@@ -31,8 +31,8 @@ onMounted(() => {
 <template>
   <div full bg-cover style="background-image: url('/sonoma.webp')">
     <div ref="paneCon" fixed left="1/2" top="1/2" translate-x="-1/2" translate-y="-1/2" />
-    <ClientOnly>
+    <client-only>
       <Dock />
-    </ClientOnly>
+    </client-only>
   </div>
 </template>

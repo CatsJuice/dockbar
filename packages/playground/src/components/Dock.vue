@@ -79,18 +79,18 @@ const buttons = computed(() => [
 .dock {
   position: fixed;
   border-radius: 20px;
-  &::after {
-    content: "";
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    top: 0;
-    border-radius: inherit;
-    backdrop-filter: blur(10px) saturate(180%);
-    background-color: rgba(255,255,255,0.3);
-    z-index: -1;
-  }
+}
+.dock::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  top: 0;
+  border-radius: inherit;
+  backdrop-filter: blur(10px) saturate(180%);
+  background-color: rgba(255,255,255,0.3);
+  z-index: -1;
 }
 .dock-btn {
   color: #444;
