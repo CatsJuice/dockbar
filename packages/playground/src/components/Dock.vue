@@ -40,7 +40,7 @@ const buttons = computed(() => [
 </script>
 
 <template>
-  <div class="dock" :class="{ [config.position]: true }">
+  <div class="dock" :class="{ [config.position]: true, [config.direction]: true }">
     <dock-wrapper
       :size="config.size"
       :padding="config.padding"
