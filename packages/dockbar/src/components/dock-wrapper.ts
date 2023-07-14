@@ -39,6 +39,12 @@ export class DockWrapper extends LitElement {
   @property({ type: Number })
   gap = 5
 
+  @property({ type: Boolean })
+  willChange = false
+
+  @property({ type: String })
+  easing = 'cubicBezier(0, 0.55, 0.45, 1)'
+
   constructor() {
     super()
   }
@@ -52,7 +58,17 @@ export class DockWrapper extends LitElement {
       element.style.setProperty('width', `${this.size}px`)
       element.style.setProperty('height', `${this.size}px`)
       element.style.setProperty('flex-shrink', '0')
+      element.style.setProperty('display', 'flex')
+      element.style.setProperty('position', 'relative')
+      const slot = element.firstChild
+      slot.style.setProperty('width', `${this.size}px`)
+      slot.style.setProperty('height', `${this.size}px`)
+      slot.style.setProperty('position', 'absolute')
+      slot.style.setProperty('top', '50%')
+      slot.style.setProperty('left', '50%')
+      slot.style.setProperty('transform', 'translate(-50%, -50%)')
     })
+    this.onWillChangeChanged(this.willChange)
     this.observe()
   }
 
@@ -100,7 +116,13 @@ export class DockWrapper extends LitElement {
         width: `${this.size}px`,
         height: `${this.size}px`,
         duration: 100,
-        easing: 'cubicBezier(0.33, 1, 0.68, 1)',
+        easing: this.easing,
+      })
+      anime({
+        targets: child.firstChild,
+        scale: 1,
+        duration: 100,
+        easing: this.easing,
       })
     })
   }
@@ -146,7 +168,13 @@ export class DockWrapper extends LitElement {
         width: `${this.size * scale}px`,
         height: `${this.size * scale}px`,
         duration: 100,
-        easing: 'cubicBezier(0.33, 1, 0.68, 1)',
+        easing: this.easing,
+      })
+      anime({
+        targets: child.firstChild,
+        scale,
+        duration: 100,
+        easing: this.easing,
       })
     })
   }
@@ -185,9 +213,19 @@ export class DockWrapper extends LitElement {
     `
   }
 
+  onWillChangeChanged(v: boolean) {
+    this._children.forEach((child) => {
+      child.style.setProperty('will-change', v ? 'width, height' : 'none')
+      // the context may be blurry when will-change is set to transform
+      // child.firstChild.style.setProperty('will-change', v ? 'transform' : 'none')
+    })
+  }
+
   updated(changedProperties: any) {
     if (changedProperties.has('direction'))
       setTimeout(this.onResize.bind(this))
+    if (changedProperties.has('willChange'))
+      this.onWillChangeChanged(this.willChange)
   }
 
   static styles = css`

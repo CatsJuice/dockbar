@@ -3,6 +3,7 @@
   "type": "module",
   "version": "0.0.0",
   "private": true,
+  "main": "src/index.ts",
   "scripts": {
     "dev": "vite",
     "build": "rimraf ../../dist && tsc --emitDeclarationOnly --noEmit false && vite build",
