@@ -61,13 +61,12 @@ export class DockWrapper extends LitElement {
       element.style.setProperty('display', 'flex')
       element.style.setProperty('position', 'relative')
       const slot = element.firstChild
-      slot.style.setProperty('width', `${this.size}px`)
-      slot.style.setProperty('height', `${this.size}px`)
       slot.style.setProperty('position', 'absolute')
       slot.style.setProperty('top', '50%')
       slot.style.setProperty('left', '50%')
       slot.style.setProperty('transform', 'translate(-50%, -50%)')
     })
+    this.onSizeChanged(this.size)
     this.onWillChangeChanged(this.willChange)
     this.observe()
   }
@@ -221,11 +220,23 @@ export class DockWrapper extends LitElement {
     })
   }
 
+  onSizeChanged(size: number) {
+    this._children.forEach((child) => {
+      child.style.setProperty('width', `${size}px`)
+      child.style.setProperty('height', `${size}px`)
+      const slot = child.firstChild
+      slot.style.setProperty('width', `${size}px`)
+      slot.style.setProperty('height', `${size}px`)
+    })
+  }
+
   updated(changedProperties: any) {
     if (changedProperties.has('direction'))
       setTimeout(this.onResize.bind(this))
     if (changedProperties.has('willChange'))
       this.onWillChangeChanged(this.willChange)
+    if (changedProperties.has('size'))
+      this.onSizeChanged(this.size)
   }
 
   static styles = css`
