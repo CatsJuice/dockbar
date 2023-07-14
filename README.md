@@ -1,6 +1,6 @@
 <!-- Logo -->
 <p align="center">
-  <img height="100" src="./packages/playground/public/dockbar.svg">
+  <img height="100" src="https://dock.oooo.so/dockbar.svg">
 </p>
 
 <!-- Bridge -->
@@ -13,7 +13,7 @@
 </p>
 <p align="center">
   <img src="https://img.shields.io/npm/l/dockbar"/>
-  <img src="https://img.shields.io/bundlephobia/min/dockbar"/>
+  <img src="https://img.shields.io/npm/dw/dockbar"/>
   <img src="https://img.shields.io/npm/v/dockbar"/>
 </p>
 
@@ -55,8 +55,9 @@
   <head>
     <script src="https://unpkg.com/dockbar@latest/dockbar.iife.js"></script>
   </head>
+  ```
 
-  See [cursor.oooo.so](https://ipad-cursor.oooo.so) for more details.
+  Go to [Codepen](https://codepen.io/catsjuice/pen/GRwQdza) for a quick try.
 
 ## Usage
 
@@ -83,6 +84,10 @@ It is recommended to use a custom element inside `dock-item`, so that you can cu
 </dock-wrapper>
 ```
 
+You may need to look at docs if you are using a framework like Vue.js or React.
+- [Using Custom Elements in Vue](https://vuejs.org/guide/extras/web-components.html#using-custom-elements-in-vue)
+- [Custom HTML Elements in React](https://react.dev/reference/react-dom/components#custom-html-elements)
+
 ### Custom Style
 
 Apply `class` to `dock-wrapper` and `dock-item` and customize your own style.
@@ -95,7 +100,7 @@ For more, see [Configuration](#configuration).
 There are some problems yet to be solved:
 
 - [ ] SSR compatibility
-  It does not work will in SSR framework like Nuxt.js. For now you have to render it inside `ClientOnly`.
+  It does not work will in SSR framework like Nuxt.js. For now you have to render it inside `ClientOnly`, and import component asynchronously.
 - [ ] Style asynchronous loading causes a flash on init
   If you are not using by `iife`, it may cause a flash on init, because the style is loaded asynchronously. For now you could resolve this by applying a style:
   ```html
@@ -130,4 +135,4 @@ There are some problems yet to be solved:
 
 ### Sizes
 
-![customize sizes](./packages/playground/public/prop-desc.svg)
+![customize sizes](https://dock.oooo.so/prop-desc.svg)
