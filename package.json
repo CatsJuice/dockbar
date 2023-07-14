@@ -3,9 +3,14 @@
   "type": "module",
   "version": "0.1.0",
   "description": "A macOS-like dock made with Web-Components",
-  "author": "CatsJuice",
   "license": "MIT",
-  "keywords": [],
+  "keywords": [
+    "macOS",
+    "dock",
+    "macOS-dock"
+  ],
+  "author": "CatsJuice<https://github.com/CatsJuice>",
+  "repository": "https://github.com/catsjuice/dockbar/",
   "exports": {
     ".": {
       "types": "./dist/types/index.d.ts",
