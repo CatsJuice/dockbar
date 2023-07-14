@@ -89,6 +89,8 @@
 <body>
   <button id="toggleDirection">Change direction(horizontal)</button>
   <button id="togglePosition">Change Position(bottom)</button>
+  <input type="range" id="padding" value="0" min="0" max="100" />
+  <input type="range" id="maxScale" value="0" min="0" max="10" />
 
 
   <dock-wrapper class="glass" id="dock"></dock-wrapper>
@@ -98,7 +100,16 @@
     // const $class = className => document.getElementsByClassName(className)
     const toggleDirection = $id('toggleDirection')
     const togglePosition = $id('togglePosition')
+    const paddingInput = $id('padding')
+    const maxScaleInput = $id('maxScale')
     const dock = $id('dock')
+
+    paddingInput.oninput = function (e) {
+      dock.setAttribute('padding', e.target.value)
+    }
+    maxScaleInput.oninput = function (e) {
+      dock.setAttribute('maxScale', e.target.value)
+    }
 
     const fragment = document.createDocumentFragment()
     for (let i = 0; i < 15; i++) {

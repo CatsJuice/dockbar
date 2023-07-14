@@ -18,10 +18,10 @@ export class DockWrapper extends LitElement {
   @property({ type: Boolean })
   disabled = false
 
-  @property({ type: Number })
+  @property({ type: Number, attribute: 'max-range' })
   maxRange = 200
 
-  @property({ type: Number })
+  @property({ type: Number, attribute: 'max-scale' })
   maxScale = 2
 
   @property({ type: String })
@@ -39,7 +39,7 @@ export class DockWrapper extends LitElement {
   @property({ type: Number })
   gap = 5
 
-  @property({ type: Boolean })
+  @property({ type: Boolean, attribute: 'will-change' })
   willChange = false
 
   @property({ type: String })
@@ -55,8 +55,6 @@ export class DockWrapper extends LitElement {
       (node: any) => node.nodeName.toUpperCase() === 'DOCK-ITEM',
     )
     this._children.forEach((element: any) => {
-      element.style.setProperty('width', `${this.size}px`)
-      element.style.setProperty('height', `${this.size}px`)
       element.style.setProperty('flex-shrink', '0')
       element.style.setProperty('display', 'flex')
       element.style.setProperty('position', 'relative')
@@ -206,7 +204,7 @@ export class DockWrapper extends LitElement {
 
   render() {
     return html`
-      <ul class=${this.className} .style=${this.wrapperStyle}>
+      <ul class=${this.className} style="${this.wrapperStyle}">
         <slot @slotchange=${this.onSlotChange}></slot>
       </ul>
     `
