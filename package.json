@@ -1,7 +1,7 @@
 {
   "name": "dockbar",
   "type": "module",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "A macOS-like dock made with Web-Components",
   "author": "CatsJuice",
   "license": "MIT",
