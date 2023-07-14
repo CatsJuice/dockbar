@@ -18,9 +18,9 @@
   "scripts": {
     "postinstall": "npx simple-git-hooks",
     "dev": "cd packages/dockbar && pnpm dev",
-    "dev:playground": "pnpm dev --filter playground",
+    "dev:playground": "pnpm --filter playground dev",
     "build:dockbar": "cd packages/dockbar && pnpm build",
-    "build:playground": "pnpm build --filter playground",
+    "build:playground": "pnpm --filter playground build",
     "build": "node ./.build.mjs",
     "publish": "node ./.build.mjs --publish"
   },
