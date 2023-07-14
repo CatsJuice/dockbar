@@ -144,7 +144,7 @@ importers:
         version: registry.npmmirror.com/typescript@5.1.6
       vite:
         specifier: ^4.4.0
-        version: registry.npmmirror.com/vite@4.4.3(@types/node@18.16.19)
+        version: registry.npmmirror.com/vite@4.4.3(@types/node@20.4.1)
 
   examples/vite-vue:
     dependencies:
@@ -163,7 +163,7 @@ importers:
         version: registry.npmmirror.com/typescript@5.1.6
       vite:
         specifier: ^4.4.0
-        version: registry.npmmirror.com/vite@4.4.3(@types/node@18.16.19)
+        version: registry.npmmirror.com/vite@4.4.3(@types/node@20.4.1)
       vue-tsc:
         specifier: ^1.8.3
         version: registry.npmmirror.com/vue-tsc@1.8.4(typescript@5.1.6)
@@ -201,9 +201,18 @@ importers:
       '@vueuse/head':
         specifier: ^1.1.26
         version: registry.npmmirror.com/@vueuse/head@1.1.26(vue@3.3.4)
+      dockbar:
+        specifier: workspace:^
+        version: link:../..
+      ipad-cursor:
+        specifier: ^0.4.4
+        version: registry.npmmirror.com/ipad-cursor@0.4.4
       nprogress:
         specifier: ^0.2.0
         version: registry.npmmirror.com/nprogress@0.2.0
+      tweakpane:
+        specifier: ^3.1.10
+        version: registry.npmmirror.com/tweakpane@3.1.10
       vue:
         specifier: ^3.3.4
         version: registry.npmmirror.com/vue@3.3.4
@@ -220,9 +229,21 @@ importers:
       '@iconify-json/carbon':
         specifier: ^1.1.18
         version: registry.npmmirror.com/@iconify-json/carbon@1.1.18
+      '@iconify-json/fa6-brands':
+        specifier: ^1.1.11
+        version: registry.npmmirror.com/@iconify-json/fa6-brands@1.1.11
+      '@iconify-json/fa6-solid':
+        specifier: ^1.1.13
+        version: registry.npmmirror.com/@iconify-json/fa6-solid@1.1.13
+      '@iconify-json/mingcute':
+        specifier: ^1.1.7
+        version: registry.npmmirror.com/@iconify-json/mingcute@1.1.7
       '@intlify/unplugin-vue-i18n':
         specifier: ^0.12.2
         version: registry.npmmirror.com/@intlify/unplugin-vue-i18n@0.12.2(rollup@2.79.1)(vue-i18n@9.2.2)
+      '@tweakpane/core':
+        specifier: ^1.1.9
+        version: registry.npmmirror.com/@tweakpane/core@1.1.9
       '@types/markdown-it-link-attributes':
         specifier: ^3.0.1
         version: registry.npmmirror.com/@types/markdown-it-link-attributes@3.0.1
@@ -2843,6 +2864,30 @@ packages:
       '@iconify/types': registry.npmmirror.com/@iconify/types@2.0.0
     dev: true
 
+  registry.npmmirror.com/@iconify-json/fa6-brands@1.1.11:
+    resolution: {integrity: sha512-+/dsIafxFCXlUvti0EHzVas9tnYXGqcSpybTBzzXbSVl2Ay1v26e/so/fz2Wrh8L3JrXq0LrMUYDsgZ4geQOqw==, registry: https://registry.npm.taobao.org/, tarball: https://registry.npmmirror.com/@iconify-json/fa6-brands/-/fa6-brands-1.1.11.tgz}
+    name: '@iconify-json/fa6-brands'
+    version: 1.1.11
+    dependencies:
+      '@iconify/types': registry.npmmirror.com/@iconify/types@2.0.0
+    dev: true
+
+  registry.npmmirror.com/@iconify-json/fa6-solid@1.1.13:
+    resolution: {integrity: sha512-4rpV5lqeerkL3PBuoIYFKtOWjEIcv2q9g+lai0jSTlgzmF/hcxkozXzhhGtEjQhYqAIPR01wxlHFIhwhLN2O9w==, registry: https://registry.npm.taobao.org/, tarball: https://registry.npmmirror.com/@iconify-json/fa6-solid/-/fa6-solid-1.1.13.tgz}
+    name: '@iconify-json/fa6-solid'
+    version: 1.1.13
+    dependencies:
+      '@iconify/types': registry.npmmirror.com/@iconify/types@2.0.0
+    dev: true
+
+  registry.npmmirror.com/@iconify-json/mingcute@1.1.7:
+    resolution: {integrity: sha512-luBuSPks/Lbk4SCyt1RWVCQ8RM1lCIXPMY30qDyk0AtI+8n+eOjMF18y1vDjHUk646Mhw4HQXoRsoPJHlt7mvA==, registry: https://registry.npm.taobao.org/, tarball: https://registry.npmmirror.com/@iconify-json/mingcute/-/mingcute-1.1.7.tgz}
+    name: '@iconify-json/mingcute'
+    version: 1.1.7
+    dependencies:
+      '@iconify/types': registry.npmmirror.com/@iconify/types@2.0.0
+    dev: true
+
   registry.npmmirror.com/@iconify-json/twemoji@1.1.11:
     resolution: {integrity: sha512-ZA2v2AGWPC0rxiZDLqsVD+DoYB3n5Ft5q0YYAsy9QyYvoNWSdh6Vxe5d3yUP4mSpNkE4YW96RAjiZu72uXb7kQ==, registry: https://registry.npm.taobao.org/, tarball: https://registry.npmmirror.com/@iconify-json/twemoji/-/twemoji-1.1.11.tgz}
     name: '@iconify-json/twemoji'
@@ -4015,6 +4060,12 @@ packages:
       minimatch: registry.npmmirror.com/minimatch@9.0.3
     dev: true
 
+  registry.npmmirror.com/@tweakpane/core@1.1.9:
+    resolution: {integrity: sha512-9tq+KAhaqPiOgsFyLPAz1IMXkVfhRqxGzAgy1ps3As6o3W7XjnU7sev6OlD/Z+Pzw8uZVMukkSHf2e0uCU6u0A==, registry: https://registry.npm.taobao.org/, tarball: https://registry.npmmirror.com/@tweakpane/core/-/core-1.1.9.tgz}
+    name: '@tweakpane/core'
+    version: 1.1.9
+    dev: true
+
   registry.npmmirror.com/@types/animejs@3.1.7:
     resolution: {integrity: sha512-kFSyjM+fLo3oE9noWEtUvF82ttN8fTrKohiEMIrSzEzEjnsCmtO0rBCUQBlSPEb2w8vfN+v4/Zo0tK21Bgmq4g==, registry: https://registry.npm.taobao.org/, tarball: https://registry.npmmirror.com/@types/animejs/-/animejs-3.1.7.tgz}
     name: '@types/animejs'
@@ -5037,7 +5088,7 @@ packages:
       chokidar: registry.npmmirror.com/chokidar@3.5.3
       fast-glob: registry.npmmirror.com/fast-glob@3.3.0
       magic-string: registry.npmmirror.com/magic-string@0.30.1
-      vite: registry.npmmirror.com/vite@4.4.3(@types/node@18.16.19)
+      vite: registry.npmmirror.com/vite@4.4.3(@types/node@20.4.1)
     transitivePeerDependencies:
       - rollup
     dev: true
@@ -5113,7 +5164,7 @@ packages:
       '@babel/plugin-transform-react-jsx-self': registry.npmmirror.com/@babel/plugin-transform-react-jsx-self@7.22.5(@babel/core@7.22.8)
       '@babel/plugin-transform-react-jsx-source': registry.npmmirror.com/@babel/plugin-transform-react-jsx-source@7.22.5(@babel/core@7.22.8)
       react-refresh: registry.npmmirror.com/react-refresh@0.14.0
-      vite: registry.npmmirror.com/vite@4.4.3(@types/node@18.16.19)
+      vite: registry.npmmirror.com/vite@4.4.3(@types/node@20.4.1)
     transitivePeerDependencies:
       - supports-color
     dev: true
@@ -10886,6 +10937,12 @@ packages:
     version: 2.0.0
     dev: true
 
+  registry.npmmirror.com/ipad-cursor@0.4.4:
+    resolution: {integrity: sha512-JfftapDmfJE+Bksji6TztFeB3rJ9s6zUB5Z1ZuNnU0QFNezXMdNAC0ivQXQr/AQd+mc9XQxS4Zfptx/PP7h9ig==, registry: https://registry.npm.taobao.org/, tarball: https://registry.npmmirror.com/ipad-cursor/-/ipad-cursor-0.4.4.tgz}
+    name: ipad-cursor
+    version: 0.4.4
+    dev: false
+
   registry.npmmirror.com/ipaddr.js@1.9.1:
     resolution: {integrity: sha512-0KI/607xoxSToH7GjN1FfSbLoU0+btTicjsQSWQlh/hZykN8KpmMf7uYwPW3R+akZ6R/w18ZlXSHBYXiYUPO3g==, registry: https://registry.npm.taobao.org/, tarball: https://registry.npmmirror.com/ipaddr.js/-/ipaddr.js-1.9.1.tgz}
     name: ipaddr.js
@@ -16209,6 +16266,12 @@ packages:
       safe-buffer: registry.npmmirror.com/safe-buffer@5.2.1
     dev: true
 
+  registry.npmmirror.com/tweakpane@3.1.10:
+    resolution: {integrity: sha512-rqwnl/pUa7+inhI2E9ayGTqqP0EPOOn/wVvSWjZsRbZUItzNShny7pzwL3hVlaN4m9t/aZhsP0aFQ9U5VVR2VQ==, registry: https://registry.npm.taobao.org/, tarball: https://registry.npmmirror.com/tweakpane/-/tweakpane-3.1.10.tgz}
+    name: tweakpane
+    version: 3.1.10
+    dev: false
+
   registry.npmmirror.com/tweetnacl@0.14.5:
     resolution: {integrity: sha512-KXXFFdAbFXY4geFIwoyNK+f5Z1b7swfXABfL7HXCmoIWMKU3dmS26672A4EeQtDzLKy7SXmfBu51JolvEKwtGA==, registry: https://registry.npm.taobao.org/, tarball: https://registry.npmmirror.com/tweetnacl/-/tweetnacl-0.14.5.tgz}
     name: tweetnacl
@@ -17236,7 +17299,7 @@ packages:
       debug: registry.npmmirror.com/debug@4.3.4(supports-color@8.1.1)
       fast-glob: registry.npmmirror.com/fast-glob@3.3.0
       pretty-bytes: registry.npmmirror.com/pretty-bytes@6.1.0
-      vite: registry.npmmirror.com/vite@4.4.3(@types/node@20.4.1)
+      vite: registry.npmmirror.com/vite@4.4.3(@types/node@18.16.19)
       workbox-build: registry.npmmirror.com/workbox-build@7.0.0
       workbox-window: registry.npmmirror.com/workbox-window@7.0.0
     transitivePeerDependencies:
@@ -17327,7 +17390,7 @@ packages:
       kolorist: registry.npmmirror.com/kolorist@1.8.0
       magic-string: registry.npmmirror.com/magic-string@0.30.1
       shell-quote: registry.npmmirror.com/shell-quote@1.8.1
-      vite: registry.npmmirror.com/vite@4.4.3(@types/node@20.4.1)
+      vite: registry.npmmirror.com/vite@4.4.3(@types/node@18.16.19)
     transitivePeerDependencies:
       - supports-color
     dev: true

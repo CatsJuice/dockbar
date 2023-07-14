@@ -1,4 +1,11 @@
 <script setup lang="ts">
+// useCursor({
+//   enableAutoTextCursor: true,
+//   enableLighting: true,
+//   blockStyle: {
+//     radius: 'auto',
+//   },
+// })
 useHead({
   title: 'Dockbar - Playground',
   meta: [
