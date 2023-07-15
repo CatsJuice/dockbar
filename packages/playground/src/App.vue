@@ -26,5 +26,33 @@ useHead({
 </script>
 
 <template>
-  <RouterView />
+  <div full>
+    <transition name="fade">
+      <div
+        v-if="!isDark"
+        fixed bg-cover bg-center bg-no-repeat inset-0
+        :style="{ backgroundImage: `url('/sonoma.day.webp')` }"
+      />
+
+      <div
+        v-else
+        fixed bg-cover bg-center bg-no-repeat inset-0
+        :style="{ backgroundImage: `url('/sonoma.night.webp')` }"
+      />
+    </transition>
+    <RouterView relative z-1 />
+  </div>
 </template>
+
+<style>
+.fade-enter-active {
+  transition: opacity 1.5s;
+}
+.fade-leave-active {
+  transition: opacity 2s;
+}
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+</style>
