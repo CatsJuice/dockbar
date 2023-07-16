@@ -60,6 +60,10 @@ export class DockItem extends LitElement {
       justify-content: center;
       align-items: center;
     }
+    .dock-item__scale > ::slotted(*) {
+      width: 100%;
+      height: 100%;
+    }
   `
 }
 
