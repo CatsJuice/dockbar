@@ -40,7 +40,9 @@ useHead({
         :style="{ backgroundImage: `url('/room-night.webp')` }"
       />
     </transition>
-    <RouterView relative z-1 />
+    <div full relative z-1>
+      <RouterView />
+    </div>
   </div>
 </template>
 

@@ -22,8 +22,6 @@ onMounted(() => {
 <template>
   <div
     ref="paneCon"
-
-    fixed filter-contrast-140 dark:filter-invert-0 filter-invert-90 dark:filter-contrast-100 w-300px
-    left="1/2" top="1/2" translate-x="-1/2" translate-y="-1/2"
+    dark:filter-invert-0 dark:filter-contrast-100 filter-invert-100
   />
 </template>

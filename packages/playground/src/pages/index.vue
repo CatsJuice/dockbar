@@ -1,11 +1,13 @@
 <script setup lang="ts">
+import Home from '~/views/Home.vue'
+
 defineOptions({
   name: 'IndexPage',
 })
 const Dock = defineAsyncComponent(() => import('~/components/Dock.vue'))
 const $window = ref<HTMLElement>()
 
-const { left, right, top, bottom } = useElementBounding($window)
+const { left, top, right, bottom } = useElementBounding($window)
 
 const dockStyle = computed(() => {
   if (config.position === 'bottom')
@@ -27,7 +29,7 @@ const dockStyle = computed(() => {
       translate-y="-1/2" translate-x="-80px" :style="{ left: `${left}px` }"
     />
     <VisionosWindow ref="$window" width="80vw" height="80vh" relative max-w-1200px>
-      <ConfigPanel />
+      <Home />
     </VisionosWindow>
   </div>
   <client-only>
@@ -38,9 +40,5 @@ const dockStyle = computed(() => {
 <style>
 .tp-rotv_b {
   pointer-events: none;
-}
-
-.dock {
-
 }
 </style>
