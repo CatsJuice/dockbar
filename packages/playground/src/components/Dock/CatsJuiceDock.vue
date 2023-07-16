@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import 'dockbar'
-import { isDark } from '../composables/dark'
+import { isDark } from '../../composables/dark'
 
 const buttons = computed(() => [
   {
@@ -40,8 +40,8 @@ const buttons = computed(() => [
 </script>
 
 <template>
-  <div class="dock" :class="{ [config.position]: true, [config.direction]: true }">
-    <LightBorderFrame radius="20">
+  <div class="dock">
+    <LightBorderFrame :radius="20" :border-width="1.2">
       <dock-wrapper
         :size="config.size"
         :padding="config.padding"
@@ -62,7 +62,7 @@ const buttons = computed(() => [
             <component
               :is="btn.href ? 'a' : 'div'"
               target="_blank"
-              data-cursor="block" full flex-center class="dock-btn"
+              data-cursor="block" flex-center full class="dock-btn"
               :href="btn.href"
               @click="btn?.action?.()"
             >
@@ -77,11 +77,8 @@ const buttons = computed(() => [
   </div>
 </template>
 
-<style>
+<style scoped>
 .dock {
-  --translate-x: 0;
-  --translate-y: 0;
-  transform: translate(var(--translate-x), var(--translate-y));
   border-radius: 22px;
 }
 .dock::after {
@@ -127,13 +124,6 @@ const buttons = computed(() => [
   backdrop-filter: blur(12px) saturate(110%);
 }
 
-/* position */
-.dock.bottom,
-.dock.top {
-  left: 50%;
-  --translate-x: -50%;
-}
-
 .dock.horizontal .separator {
   width: 1px;
   height: 20px;
@@ -141,11 +131,5 @@ const buttons = computed(() => [
 .dock.vertical .separator {
   width: 20px;
   height: 1px;
-}
-
-.dock.left,
-.dock.right {
-  top: 50%;
-  --translate-y: -50%;
 }
 </style>

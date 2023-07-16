@@ -4,7 +4,7 @@ import Home from '~/views/Home.vue'
 defineOptions({
   name: 'IndexPage',
 })
-const Dock = defineAsyncComponent(() => import('~/components/Dock.vue'))
+const Dock = defineAsyncComponent(() => import('~/components/Dock/index.vue'))
 const $window = ref<HTMLElement>()
 
 const { left, top, right, bottom } = useElementBounding($window)

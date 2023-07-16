@@ -67,6 +67,8 @@ const radiusIn = computed(() => `${props.radius - 8}px`)
           py1
           font-500
           text-white
+          hover:bg="dark/10"
+          dark:hover:bg="white/5"
           @click="active = index"
         >
           <LanguageIcon :lang="lang" />
@@ -99,9 +101,8 @@ const radiusIn = computed(() => `${props.radius - 8}px`)
       class="icon-btn"
       data-cursor="block"
       p="1"
-
-      flex-center text-sm cursor-pointer right-12px absolute w-36px h-36px
-      :style="{ top: codes.length > 1 ? '56px' : '16px' }"
+      flex-center text-sm cursor-pointer right-12px absolute w-36px h-36px active:scale-90
+      :style="{ top: codes.length > 1 ? '52px' : '16px' }"
       @click="onCopy"
     >
       <div i-carbon:copy />
