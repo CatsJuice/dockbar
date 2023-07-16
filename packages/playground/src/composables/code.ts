@@ -9,6 +9,10 @@ function tabLines(lines: string[], n = 1) {
   return lines.map(line => tab(line, n))
 }
 
+function compress(lines: string[]) {
+  return lines.map(line => line.trim()).filter(Boolean).join(' ')
+}
+
 function html({ head, body }: { head: string; body: string }) {
   return rows([
     '<!DOCTYPE html>',
@@ -63,7 +67,14 @@ export function useCode() {
     const cdn = scriptTag('', { src: 'https://unpkg.com/dockbar@latest/dockbar.iife.js' })
 
     const dock = tag('dock-wrapper', [
-      ...Array(count).fill(0).flatMap((_, i) => tag('dock-item', divTag(`Item ${i}`, { class: 'item' }))),
+      ...Array(count).fill(0).flatMap((_, i) =>
+        tag(
+          'dock-item',
+          compress(
+            divTag(`${i}`, { class: 'item' }),
+          ),
+        ),
+      ),
     ], {
       'size': config.size,
       'padding': config.padding,
@@ -79,7 +90,7 @@ export function useCode() {
       ...cdn,
       ...dock,
     ]
-    const head = styleTag('')
+    const head = styleTag([])
 
     return html({
       body: rows(body),

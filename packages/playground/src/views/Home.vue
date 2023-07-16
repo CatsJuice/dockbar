@@ -112,7 +112,7 @@ const installCodes = [
   box-shadow: none
   border-radius: 12px
   overflow: hidden
-  background: rgba(0,0,0, 0.5)
+  background: rgba(0,0,0, 0.45)
 .dark .glass .tp-rotv
   background: rgba(0,0,0,0.1)
 

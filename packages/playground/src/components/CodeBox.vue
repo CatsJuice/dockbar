@@ -49,7 +49,7 @@ const radiusIn = computed(() => `${props.radius - 4}px`)
     flex="~ col nowrap gap-2"
     relative rounded-3 overflow-hidden text-sm
     :class="noPadding ? '' : 'p2'"
-    bg="white/30"
+    bg="dark-8/10"
     dark:bg="dark-8/10"
   >
     <header v-if="codes.length > 1" relative flex="~ gap-3" items-center w-full>
@@ -82,7 +82,7 @@ const radiusIn = computed(() => `${props.radius - 4}px`)
 
     <main
       dark:bg="dark-8/30"
-      bg="white/30"
+      bg="dark-8/20"
       :style="{ borderRadius: radiusIn, padding: editorPadding }"
       flex="~ 1"
       data-cursor="text"
@@ -99,8 +99,8 @@ const radiusIn = computed(() => `${props.radius - 4}px`)
       data-cursor="block"
       p="1"
       :style="{ top: codes.length > 1 ? '52px' : '16px' }"
-      flex-center text-sm cursor-pointer right-12px absolute
-      w-36px h-36px active:scale-90 dark:text-white text-dark-2
+
+      flex-center text-sm cursor-pointer text-white right-12px absolute w-36px h-36px active:scale-90
       @click="onCopy"
     >
       <div i-carbon:copy />

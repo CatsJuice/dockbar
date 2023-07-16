@@ -5,6 +5,7 @@ const apps = [
   {
     icon: 'Files.jpg',
     name: 'Files',
+    href: '',
   },
   {
     icon: 'App Store.jpg',
@@ -17,11 +18,6 @@ const apps = [
   {
     icon: 'Keynote.jpg',
     name: 'Keynote',
-  },
-  {
-    icon: 'Lofi-1.webp',
-    name: 'Lofi',
-    href: 'https://lofidot.com/',
   },
   {
     icon: 'Mail.jpg',
@@ -38,11 +34,6 @@ const apps = [
   {
     icon: 'Music.jpg',
     name: 'Music',
-  },
-  {
-    icon: 'Lofi-2.webp',
-    name: 'Lofi',
-    href: 'https://lofidot.com/',
   },
   {
     icon: 'TV.jpg',
@@ -69,6 +60,23 @@ const apps = [
             <img :src="`/macos-icons/${app.icon}`" :alt="app.name">
           </a>
         </dock-item>
+
+        <dock-item relative z-2>
+          <a href="https://lofidot.com" cursor-pointer class="dock-item no-clip">
+            <LofiIcon />
+          </a>
+        </dock-item>
+
+        <dock-item relative z-0>
+          <div
+
+            class="dock-item" flex="~ center" relative cursor-pointer z-1 bg-white dark:bg-dark
+            @click="toggleDark()"
+          >
+            <div v-if="isDark" i-carbon:moon />
+            <div v-else i-carbon:sun />
+          </div>
+        </dock-item>
       </dock-wrapper>
     </LightBorderFrame>
   </div>
@@ -88,5 +96,8 @@ const apps = [
   border-radius: 10px;
   overflow: hidden;
   box-shadow: 0px 1px 2px rgba(0,0,0,0.3);
+}
+.dock-item.no-clip {
+  overflow: visible;
 }
 </style>

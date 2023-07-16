@@ -13,6 +13,7 @@ declare module 'vue' {
     Dock: typeof import('./components/Dock/index.vue')['default']
     LanguageIcon: typeof import('./components/LanguageIcon.vue')['default']
     LightBorderFrame: typeof import('./components/light-border-frame.vue')['default']
+    LofiIcon: typeof import('./components/Dock/LofiIcon.vue')['default']
     MacosDock: typeof import('./components/Dock/MacosDock.vue')['default']
     MacosWindow: typeof import('./components/macos-window.vue')['default']
     RaunoDock: typeof import('./components/Dock/RaunoDock.vue')['default']
