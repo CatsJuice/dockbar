@@ -1,11 +1,6 @@
 <script setup lang="ts">
-// useCursor({
-//   enableAutoTextCursor: true,
-//   enableLighting: true,
-//   blockStyle: {
-//     radius: 'auto',
-//   },
-// })
+import { isClient } from '@vueuse/shared'
+
 useHead({
   title: 'Dockbar - Playground',
   meta: [
@@ -23,6 +18,34 @@ useHead({
     },
   ],
 })
+const { x, y } = useMouse()
+const parallaxDistance = 10
+
+const bgPosition = computed(() => {
+  if (!isClient)
+    return {}
+  const screenCenter = [
+    window.innerWidth / 2,
+    window.innerHeight / 2,
+  ]
+  const mousePosition = [x.value, y.value]
+  const diff = [
+    mousePosition[0] - screenCenter[0],
+    mousePosition[1] - screenCenter[1],
+  ]
+  const ratio = [
+    diff[0] / screenCenter[0],
+    diff[1] / screenCenter[1],
+  ]
+  const position = [
+    ratio[0] * parallaxDistance,
+    ratio[1] * parallaxDistance,
+  ]
+  return {
+    backgroundPosition: `calc(50% - ${position[0]}px) calc(50% - ${position[1]}px)`,
+    inset: `-${parallaxDistance}px`,
+  }
+})
 </script>
 
 <template>
@@ -30,14 +53,14 @@ useHead({
     <transition name="fade">
       <div
         v-if="!isDark"
-        fixed bg-cover bg-center bg-no-repeat inset-0
-        :style="{ backgroundImage: `url('/room-day.webp')` }"
+        fixed bg-cover bg-center bg-no-repeat
+        :style="{ backgroundImage: `url('/room-day.webp')`, ...bgPosition }"
       />
 
       <div
         v-else
-        fixed bg-cover bg-center bg-no-repeat inset-0
-        :style="{ backgroundImage: `url('/room-night.webp')` }"
+        fixed bg-cover bg-center bg-no-repeat
+        :style="{ backgroundImage: `url('/room-night.webp')`, ...bgPosition }"
       />
     </transition>
     <div full relative z-1>

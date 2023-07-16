@@ -17,6 +17,5 @@ declare module 'vue' {
     RouterView: typeof import('vue-router')['RouterView']
     StyleTab: typeof import('./components/StyleTab.vue')['default']
     VisionosWindow: typeof import('./components/visionos-window.vue')['default']
-    WindowFrame: typeof import('./components/WindowFrame.vue')['default']
   }
 }
