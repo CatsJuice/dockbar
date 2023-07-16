@@ -57,19 +57,22 @@ const installCodes = [
           Dockbar
         </h1>
         <p opacity-70>
-          A macOS like dockbar component made with Web-Components
+          A macOS like dockbar component built with
+          <a underline href="https://developer.mozilla.org/en-US/docs/Web/API/Web_components" target="_blank">Web-Components</a>
+          (<a underline target="_blank" href="https://lit.dev/">Lit</a> based)
         </p>
 
         <p opacity-70 text-sm mt-2>
-          This project was heavily inspired by
+          This library was inspired by
           <a href="https://rauno.me/" target="_blank" underline>
-            rauno's personal website
+            rauno's website
           </a>
         </p>
 
         <a
-          opacity-70 underline text-xs hover:opacity-80 mt-1
+          opacity-70 underline mt-2 text-xs hover:opacity-80
           href="https://github.com/CatsJuice/dockbar"
+          target="_blank"
         >
           <div flex="~ items-center" gap-2>
             <div>Documentation</div>
