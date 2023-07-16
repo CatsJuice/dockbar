@@ -1,18 +1,25 @@
 {
   "cSpell.words": [
     "animejs",
+    "Attributify",
     "brotli",
+    "darcula",
     "dockbar",
     "execa",
+    "highlightjs",
     "iife",
+    "Lofi",
     "mingcute",
     "nprogress",
+    "rauno",
+    "rotv",
     "sizecheck",
     "slotchange",
     "sonoma",
     "taze",
     "tweakpane",
-    "unhead"
+    "unhead",
+    "visionos"
   ],
   "i18n-ally.localesPaths": [
     "packages/playground/locales"

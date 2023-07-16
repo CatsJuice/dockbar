@@ -1,0 +1,11 @@
+:root {
+  --window-glass: #808080;
+}
+
+.blur-shadow-small {
+  background: var(--windows-glass, rgba(128, 128, 128, 0.30));
+  background-blend-mode: luminosity;
+
+  box-shadow: 0px 2px 4px 0px rgba(0, 0, 0, 0.10);
+  backdrop-filter: blur(50px);
+}

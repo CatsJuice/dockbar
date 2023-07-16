@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import 'dockbar'
-import { isDark } from '../composables/dark'
+import { isDark } from '../../composables/dark'
 
 const buttons = computed(() => [
   {
@@ -40,45 +40,46 @@ const buttons = computed(() => [
 </script>
 
 <template>
-  <div class="dock" :class="{ [config.position]: true, [config.direction]: true }">
-    <dock-wrapper
-      :size="config.size"
-      :padding="config.padding"
-      :gap="config.gap"
-      :max-scale="config.maxScale"
-      :max-range="config.maxRange"
-      :disabled="config.disabled"
-      :direction="config.direction"
-      :position="config.position"
-    >
-      <component
-        :is="btn.icon ? 'dock-item' : 'div'"
-        v-for="(btn, i) in buttons"
-        :key="i"
-        :class="{ 'self-center': !btn.icon }"
+  <div class="dock">
+    <LightBorderFrame :radius="20" :border-width="1.2">
+      <dock-wrapper
+        :size="config.size"
+        :padding="config.padding"
+        :gap="config.gap"
+        :max-scale="config.maxScale"
+        :max-range="config.maxRange"
+        :disabled="config.disabled"
+        :direction="config.direction"
+        :position="config.position"
       >
-        <div v-if="btn.icon">
-          <component
-            :is="btn.href ? 'a' : 'div'"
-            target="_blank"
-            data-cursor="block" full flex-center class="dock-btn"
-            :href="btn.href"
-            @click="btn?.action?.()"
-          >
-            <div h="1/2" :class="btn.icon" />
-          </component>
-        </div>
+        <component
+          :is="btn.icon ? 'dock-item' : 'div'"
+          v-for="(btn, i) in buttons"
+          :key="i"
+          :class="{ 'self-center': !btn.icon }"
+        >
+          <div v-if="btn.icon">
+            <component
+              :is="btn.href ? 'a' : 'div'"
+              target="_blank"
+              data-cursor="block" flex-center full class="dock-btn"
+              :href="btn.href"
+              @click="btn?.action?.()"
+            >
+              <div h="1/2" :class="btn.icon" />
+            </component>
+          </div>
 
-        <div v-else bg="white/40" class="separator" />
-      </component>
-    </dock-wrapper>
+          <div v-else pointer-events-none bg="white/40" class="separator" />
+        </component>
+      </dock-wrapper>
+    </LightBorderFrame>
   </div>
 </template>
 
-<style>
+<style scoped>
 .dock {
-  position: fixed;
-  border-radius: 20px;
+  border-radius: 22px;
 }
 .dock::after {
   content: "";
@@ -100,8 +101,19 @@ const buttons = computed(() => [
   backdrop-filter: blur(12px) saturate(180%);
   position: relative;
   font-size: 100%;
+  border: 1px solid rgba(180, 180, 180, 0.1);
+  background-image: linear-gradient( 45deg,
+    rgba(255, 255, 255, 0.3),
+    rgba(255, 255, 255, 0.2),
+    rgba(255, 255, 255, 0.2),
+    rgba(255, 255, 255, 0.3)
+    );
+  background-size: 200% 100%;
 }
 
+.dark .dock {
+  border: 1px solid rgba(100, 100, 100, 0.2);
+}
 .dark .dock::after {
   background-color: rgba(0,0,0,0.2);
   backdrop-filter: blur(10px) saturate(120%);
@@ -112,13 +124,6 @@ const buttons = computed(() => [
   backdrop-filter: blur(12px) saturate(110%);
 }
 
-/* position */
-.dock.bottom,
-.dock.top {
-  left: 50%;
-  transform: translateX(-50%);
-}
-
 .dock.horizontal .separator {
   width: 1px;
   height: 20px;
@@ -126,24 +131,5 @@ const buttons = computed(() => [
 .dock.vertical .separator {
   width: 20px;
   height: 1px;
-}
-
-.dock.left,
-.dock.right {
-  top: 50%;
-  transform: translateY(-50%);
-}
-
-.dock.bottom {
-  bottom: 10px;
-}
-.dock.top {
-  top: 10px;
-}
-.dock.left {
-  left: 10px;
-}
-.dock.right {
-  right: 10px;
 }
 </style>
