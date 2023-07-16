@@ -69,7 +69,7 @@ const installCodes = [
         </a>
       </div>
 
-      <div flex="~ col" w-full gap-4 max-w-350px :class="wrap ? ['items-stretch'] : []">
+      <div text-white flex="~ col" w-full gap-4 max-w-350px :class="wrap ? ['items-stretch'] : []">
         <div font-500 text-xl :class="wrap ? ['text-center'] : []">
           Install
         </div>

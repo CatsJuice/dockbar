@@ -23,15 +23,17 @@ watch(activeStyle, (style) => {
     <router-link
       v-for="style in styles"
       :key="style.name"
-      relative
+
       flex="~ center"
-      class="tab" w-44px h-44px rounded-full
-      text-white
-      cursor-pointer
+      class="tab"
+
+      w-44px h-44px rounded-full relative text-white cursor-pointer
       :to="{ query: { style: style.name } }"
       :title="style.caption"
     >
-      <div :class="style.icon" />
+      <div v-if="style.name === 'default'" i-fa6-solid:c />
+      <div v-else-if="style.name === 'macos'" i-fa6-solid:a />
+      <div v-else i-fa6-solid:r />
     </router-link>
   </LightBorderFrame>
 </template>
