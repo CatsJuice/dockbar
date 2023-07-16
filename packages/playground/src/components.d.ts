@@ -16,6 +16,7 @@ declare module 'vue' {
     LofiIcon: typeof import('./components/Dock/LofiIcon.vue')['default']
     MacosDock: typeof import('./components/Dock/MacosDock.vue')['default']
     MacosWindow: typeof import('./components/macos-window.vue')['default']
+    MagicCard: typeof import('./components/MagicCard/index.vue')['default']
     RaunoDock: typeof import('./components/Dock/RaunoDock.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']

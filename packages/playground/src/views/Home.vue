@@ -52,7 +52,9 @@ const installCodes = [
         flex="~ col"
         :class="wrap ? ['items-center'] : []"
       >
-        <img w-100px src="/dockbar.svg">
+        <MagicCard w-100px>
+          <img w-100px src="/dockbar.svg">
+        </MagicCard>
         <h1 font-bold text-3xl mt-4>
           Dockbar
         </h1>

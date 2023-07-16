@@ -65,7 +65,7 @@ const radiusIn = computed(() => `${props.radius - 4}px`)
           flex="~ gap-2"
           transition="~ all"
           flex-center rounded-2 py1 font-500 text-white px2
-          hover:bg="dark/10"
+          hover:bg="white/10"
           dark:hover:bg="white/5"
           @click="active = index"
         >
@@ -122,13 +122,14 @@ const radiusIn = computed(() => `${props.radius - 4}px`)
 }
 .lang-tab--active {
   opacity: 1;
-  background-color: rgba(120, 120, 120, 0.3);
+  background-color: rgba(210, 210, 210, 0.4);
 }
 
 .hljs {
   background: rgba(0, 0, 0, 0) !important;
 }
-.hljs ::selection {
-  background: rgba(100, 100, 100, 0.3)
+.hljs ::selection,
+.code-box ::selection {
+  background: rgba(255,255,255, 0.3)
 }
 </style>
