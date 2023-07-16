@@ -89,11 +89,24 @@
 <body>
   <button id="toggleDirection">Change direction(horizontal)</button>
   <button id="togglePosition">Change Position(bottom)</button>
-  <input type="range" id="padding" value="0" min="0" max="100" />
-  <input type="range" id="maxScale" value="0" min="0" max="10" />
+  padding: <input type="range" id="padding" value="0" min="0" max="100" />
+  maxScale: <input type="range" id="maxScale" value="0" min="0" max="10" />
+  size: <input type="range" id="size" value="40" min="20" max="100" />
 
 
-  <dock-wrapper class="glass" id="dock"></dock-wrapper>
+  <dock-wrapper class="glass" id="dock">
+    <dock-item style="background: #ccc">1</dock-item>
+    <dock-item>
+      <div class="my-item full flex-center">
+        2
+      </div>
+    </dock-item>
+    <dock-item>
+      <div class="my-item full flex-center">
+        3
+      </div>
+    </dock-item>
+  </dock-wrapper>
 
   <script>
     const $id = id => document.getElementById(id)
@@ -102,6 +115,7 @@
     const togglePosition = $id('togglePosition')
     const paddingInput = $id('padding')
     const maxScaleInput = $id('maxScale')
+    const sizeInput = $id('size')
     const dock = $id('dock')
 
     paddingInput.oninput = function (e) {
@@ -110,20 +124,23 @@
     maxScaleInput.oninput = function (e) {
       dock.setAttribute('maxScale', e.target.value)
     }
-
-    const fragment = document.createDocumentFragment()
-    for (let i = 0; i < 15; i++) {
-      const dockItem = document.createElement('dock-item')
-      const div = document.createElement('div')
-      div.classList.add('my-item')
-      div.classList.add('full')
-      div.classList.add('flex-center')
-      div.innerText = `${i}`
-      dockItem.appendChild(div)
-
-      fragment.appendChild(dockItem)
+    sizeInput.oninput = function (e) {
+      dock.setAttribute('size', e.target.value)
     }
-    dock.appendChild(fragment)
+
+    // const fragment = document.createDocumentFragment()
+    // for (let i = 0; i < 15; i++) {
+    //   const dockItem = document.createElement('dock-item')
+    //   const div = document.createElement('div')
+    //   div.classList.add('my-item')
+    //   div.classList.add('full')
+    //   div.classList.add('flex-center')
+    //   div.innerText = `${i}`
+    //   dockItem.appendChild(div)
+
+    //   fragment.appendChild(dockItem)
+    // }
+    // dock.appendChild(fragment)
 
     const directions = [
       'horizontal',

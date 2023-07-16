@@ -58,15 +58,11 @@ export class DockWrapper extends LitElement {
       element.style.setProperty('flex-shrink', '0')
       element.style.setProperty('display', 'flex')
       element.style.setProperty('position', 'relative')
-      const slot = element.firstChild
-      slot.style.setProperty('position', 'absolute')
-      slot.style.setProperty('top', '50%')
-      slot.style.setProperty('left', '50%')
-      slot.style.setProperty('transform', 'translate(-50%, -50%)')
     })
     this.onSizeChanged(this.size)
     this.onWillChangeChanged(this.willChange)
     this.observe()
+    this.provideSharedProps()
   }
 
   disconnectedCallback(): void {
@@ -115,21 +111,17 @@ export class DockWrapper extends LitElement {
         duration: 100,
         easing: this.easing,
       })
-      anime({
-        targets: child.firstChild,
-        scale: 1,
-        duration: 100,
-        easing: this.easing,
-      })
+      child.setAttribute('scale', '1')
     })
   }
 
   onResize() {
-    const side = this.direction === 'horizontal' ? 'right' : 'bottom'
-    const lastChildRight = (this.shadowRoot?.host?.lastChild as HTMLElement)?.getBoundingClientRect()?.[side]
-    const wrapperRight = this.shadowRoot?.host?.getBoundingClientRect()?.[side]
-    this._overflowed = !!wrapperRight && !!wrapperRight && lastChildRight > wrapperRight
-    this.renderRoot.querySelector('ul')?.classList?.toggle('overflowed', this._overflowed)
+    // TODO: not working when html is formatted
+    // const side = this.direction === 'horizontal' ? 'right' : 'bottom'
+    // const lastChildRight = (this.shadowRoot?.host?.lastChild as HTMLElement)?.getBoundingClientRect()?.[side]
+    // const wrapperRight = this.shadowRoot?.host?.getBoundingClientRect()?.[side]
+    // this._overflowed = !!wrapperRight && !!wrapperRight && lastChildRight > wrapperRight
+    // this.renderRoot.querySelector('ul')?.classList?.toggle('overflowed', this._overflowed)
   }
 
   onMouseenter() {}
@@ -167,19 +159,8 @@ export class DockWrapper extends LitElement {
         duration: 100,
         easing: this.easing,
       })
-      anime({
-        targets: child.firstChild,
-        scale,
-        duration: 100,
-        easing: this.easing,
-      })
+      child.setAttribute('scale', `${scale}`)
     })
-  }
-
-  get _slottedChildren() {
-    return this.shadowRoot
-      ?.querySelector('slot')
-      ?.assignedNodes({ flatten: true })
   }
 
   get className() {
@@ -218,13 +199,18 @@ export class DockWrapper extends LitElement {
     })
   }
 
+  provideSharedProps() {
+    this._children?.forEach((el) => {
+      el.setAttribute('size', `${this.size}`)
+      el.setAttribute('easing', `${this.easing}`)
+    })
+  }
+
   onSizeChanged(size: number) {
+    this.provideSharedProps()
     this._children.forEach((child) => {
       child.style.setProperty('width', `${size}px`)
       child.style.setProperty('height', `${size}px`)
-      const slot = child.firstChild
-      slot.style.setProperty('width', `${size}px`)
-      slot.style.setProperty('height', `${size}px`)
     })
   }
 

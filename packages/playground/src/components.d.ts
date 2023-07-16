@@ -10,5 +10,6 @@ declare module 'vue' {
     Dock: typeof import('./components/Dock.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
+    WindowFrame: typeof import('./components/WindowFrame.vue')['default']
   }
 }
