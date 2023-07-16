@@ -5,7 +5,7 @@ export const styles = [{
   caption: 'CatsJuice',
 }, {
   name: 'macos',
-  icon: 'i-fa6-brands:apple',
+  icon: 'i-fa6-solid:a',
   caption: 'Apple',
 }, {
   name: 'rauno',

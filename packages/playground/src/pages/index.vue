@@ -23,9 +23,10 @@ const dockStyle = computed(() => {
 </script>
 
 <template>
-  <div full flex-center>
+  <div flex-center full>
     <StyleTab
-      fixed top="1/2"
+      class="!fixed"
+      top="1/2"
       translate-y="-1/2" translate-x="-80px" :style="{ left: `${left}px` }"
     />
     <VisionosWindow ref="$window" width="80vw" height="80vh" relative max-w-1200px>

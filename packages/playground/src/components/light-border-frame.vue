@@ -19,14 +19,13 @@ const style = computed(() => ({
 </script>
 
 <template>
-  <div ref="$el" :style="style" class="light-border-frame">
+  <div ref="$el" relative :style="style" class="light-border-frame">
     <svg
-      absolute
-      left-0
-      top-0
+      absolute top-0 left-0
       :width="width" :height="height"
       :view-box="`0 0 ${width} ${height}`"
       xmlns="http://www.w3.org/2000/svg"
+      pointer-events-none
     >
       <rect
         :x="borderWidth / 2"

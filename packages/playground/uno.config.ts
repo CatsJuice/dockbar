@@ -10,6 +10,9 @@ import {
 } from 'unocss'
 
 export default defineConfig({
+  rules: [
+    [/^flex-([\.\d]+)$/, ([_, num]) => ({ flex: `${num}` })],
+  ],
   shortcuts: [
     ['full', 'w-full h-full'],
     ['flex-center', 'flex items-center justify-center'],

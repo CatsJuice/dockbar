@@ -8,6 +8,8 @@ import '~/styles/editor.scss'
 const props = withDefaults(defineProps<{
   codes: Array<Code>
   radius: number
+  noPadding?: boolean
+  editorPadding?: string
   [key: string]: any
 }>(), { radius: 10 })
 
@@ -37,7 +39,7 @@ function onCopy(e: MouseEvent) {
 }
 
 const radiusOut = computed(() => `${props.radius}px`)
-const radiusIn = computed(() => `${props.radius - 8}px`)
+const radiusIn = computed(() => `${props.radius - 4}px`)
 </script>
 
 <template>
@@ -45,7 +47,8 @@ const radiusIn = computed(() => `${props.radius - 8}px`)
     :style="{ borderRadius: radiusOut }"
     class="code-box"
     flex="~ col nowrap gap-2"
-    relative rounded-3 p2 overflow-hidden text-sm
+    relative rounded-3 overflow-hidden text-sm
+    :class="noPadding ? '' : 'p2'"
     bg="white/30"
     dark:bg="dark-8/10"
   >
@@ -60,13 +63,8 @@ const radiusIn = computed(() => `${props.radius - 8}px`)
           :class="{ 'lang-tab--active': active === index }"
           class="lang-tab"
           flex="~ gap-2"
-          flex-center
-          rounded-2
           transition="~ all"
-          px4
-          py1
-          font-500
-          text-white
+          flex-center rounded-2 py1 font-500 text-white px2
           hover:bg="dark/10"
           dark:hover:bg="white/5"
           @click="active = index"
@@ -84,10 +82,9 @@ const radiusIn = computed(() => `${props.radius - 8}px`)
 
     <main
       dark:bg="dark-8/30"
-      bg="white/50"
-      :style="{ borderRadius: radiusIn }"
+      bg="white/30"
+      :style="{ borderRadius: radiusIn, padding: editorPadding }"
       flex="~ 1"
-
       data-cursor="text"
       w-full rounded-2 relative h-0 overflow-auto
     >
@@ -101,8 +98,9 @@ const radiusIn = computed(() => `${props.radius - 8}px`)
       class="icon-btn"
       data-cursor="block"
       p="1"
-      flex-center text-sm cursor-pointer right-12px absolute w-36px h-36px active:scale-90
       :style="{ top: codes.length > 1 ? '52px' : '16px' }"
+      flex-center text-sm cursor-pointer right-12px absolute
+      w-36px h-36px active:scale-90 dark:text-white text-dark-2
       @click="onCopy"
     >
       <div i-carbon:copy />
