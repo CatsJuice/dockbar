@@ -201,6 +201,9 @@ importers:
       '@vueuse/head':
         specifier: ^1.1.26
         version: registry.npmmirror.com/@vueuse/head@1.1.26(vue@3.3.4)
+      '@vueuse/router':
+        specifier: ^10.2.1
+        version: registry.npmmirror.com/@vueuse/router@10.2.1(vue-router@4.2.4)(vue@3.3.4)
       dockbar:
         specifier: workspace:^
         version: link:../..
@@ -6063,6 +6066,22 @@ packages:
       - supports-color
       - vue
     dev: true
+
+  registry.npmmirror.com/@vueuse/router@10.2.1(vue-router@4.2.4)(vue@3.3.4):
+    resolution: {integrity: sha512-H/1T4fLzMmeBNEmcXlbqk6AEp0HQpzf+0eeNJ6fGrs3RWClE2i3nYEFbtxfQeSm/7nZ6nf/UhgahzUQdyMhIwQ==, registry: https://registry.npm.taobao.org/, tarball: https://registry.npmmirror.com/@vueuse/router/-/router-10.2.1.tgz}
+    id: registry.npmmirror.com/@vueuse/router/10.2.1
+    name: '@vueuse/router'
+    version: 10.2.1
+    peerDependencies:
+      vue-router: '>=4.0.0-rc.1'
+    dependencies:
+      '@vueuse/shared': registry.npmmirror.com/@vueuse/shared@10.2.1(vue@3.3.4)
+      vue-demi: registry.npmmirror.com/vue-demi@0.14.5(vue@3.3.4)
+      vue-router: registry.npmmirror.com/vue-router@4.2.4(vue@3.3.4)
+    transitivePeerDependencies:
+      - '@vue/composition-api'
+      - vue
+    dev: false
 
   registry.npmmirror.com/@vueuse/shared@10.2.0(vue@3.3.4):
     resolution: {integrity: sha512-dIeA8+g9Av3H5iF4NXR/sft4V6vys76CpZ6hxwj8eMXybXk2WRl3scSsOVi+kQ9SX38COR7AH7WwY83UcuxbSg==, registry: https://registry.npm.taobao.org/, tarball: https://registry.npmmirror.com/@vueuse/shared/-/shared-10.2.0.tgz}

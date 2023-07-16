@@ -7,9 +7,14 @@ export {}
 
 declare module 'vue' {
   export interface GlobalComponents {
+    ConfigPanel: typeof import('./components/ConfigPanel.vue')['default']
     Dock: typeof import('./components/Dock.vue')['default']
+    LightBorderFrame: typeof import('./components/light-border-frame.vue')['default']
+    MacosWindow: typeof import('./components/macos-window.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
+    StyleTab: typeof import('./components/StyleTab.vue')['default']
+    VisionosWindow: typeof import('./components/visionos-window.vue')['default']
     WindowFrame: typeof import('./components/WindowFrame.vue')['default']
   }
 }

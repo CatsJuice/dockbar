@@ -12,7 +12,7 @@ useHead({
     { name: 'description', content: 'macOS-like dock component made by web-components' },
     {
       name: 'theme-color',
-      content: () => isDark.value ? '#F77D5C' : '#ffffff',
+      content: () => isDark.value ? '#222222' : '#ffffff',
     },
   ],
   link: [
@@ -31,13 +31,13 @@ useHead({
       <div
         v-if="!isDark"
         fixed bg-cover bg-center bg-no-repeat inset-0
-        :style="{ backgroundImage: `url('/sonoma.day.webp')` }"
+        :style="{ backgroundImage: `url('/room-day.webp')` }"
       />
 
       <div
         v-else
         fixed bg-cover bg-center bg-no-repeat inset-0
-        :style="{ backgroundImage: `url('/sonoma.night.webp')` }"
+        :style="{ backgroundImage: `url('/room-night.webp')` }"
       />
     </transition>
     <RouterView relative z-1 />
