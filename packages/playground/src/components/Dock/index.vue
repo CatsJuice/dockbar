@@ -11,9 +11,10 @@ const dockRender = computed(() => ({
 </script>
 
 <template>
-  <transition>
+  <transition name="fadeInBottom">
     <component
       :is="dockRender"
+      :key="activeStyle"
       class="dock"
       :class="{ [config.position]: true, [config.direction]: true }"
     />
@@ -37,5 +38,21 @@ const dockRender = computed(() => ({
 .dock.right {
   top: 50%;
   --translate-y: -50%;
+}
+
+.fadeInBottom-enter-active {
+  transition: all 0.23s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.fadeInBottom-enter-from,
+.fadeInBottom-leave-to {
+  --translate-y: 50px !important;
+  opacity: 0;
+}
+.fadeInBottom-enter-to {
+  --translate-y: 0;
+  opacity: 1;
+}
+.fadeInBottom-leave-active {
+  transition: all 0.23s cubic-bezier(0.6, -0.28, 0.735, 0.045);
 }
 </style>
