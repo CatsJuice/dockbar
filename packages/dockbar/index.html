@@ -89,9 +89,10 @@
 <body>
   <button id="toggleDirection">Change direction(horizontal)</button>
   <button id="togglePosition">Change Position(bottom)</button>
-  padding: <input type="range" id="padding" value="0" min="0" max="100" />
+  padding: <input type="range" id="padding" value="8" min="0" max="100" />
   maxScale: <input type="range" id="maxScale" value="0" min="0" max="10" />
   size: <input type="range" id="size" value="40" min="20" max="100" />
+  gap: <input type="range" id="gap" value="8" min="0" max="100" />
 
 
   <dock-wrapper class="glass" id="dock">
@@ -116,6 +117,7 @@
     const paddingInput = $id('padding')
     const maxScaleInput = $id('maxScale')
     const sizeInput = $id('size')
+    const gapInput = $id('gap')
     const dock = $id('dock')
 
     paddingInput.oninput = function (e) {
@@ -127,7 +129,10 @@
     sizeInput.oninput = function (e) {
       dock.setAttribute('size', e.target.value)
     }
-
+    gapInput.oninput = function (e) {
+      dock.setAttribute('gap', e.target.value)
+    }
+    
     // const fragment = document.createDocumentFragment()
     // for (let i = 0; i < 15; i++) {
     //   const dockItem = document.createElement('dock-item')

@@ -13,7 +13,10 @@ export class DockItem extends LitElement {
   @property({ type: Number })
   scale = 1
 
-  get liStyle() {
+  @property({ type: Number })
+  gap = 8
+
+  get sizeStyle() {
     const styleObj = {
       width: `${this.size}px`,
       height: `${this.size}px`,
@@ -24,11 +27,21 @@ export class DockItem extends LitElement {
     }, '')
   }
 
+  get gapStyle() {
+    return `--gap: ${this.gap}px`
+  }
+
+  get liStyle() {
+    return `${this.sizeStyle};${this.gapStyle}`
+  }
+
   render() {
     return html`
-      <li class="dock-item">
-        <div class="dock-item__scale" style=${this.liStyle}>
-          <slot></slot>
+      <li class="dock-item" style=${this.liStyle}>
+        <div class="dock-item__pos">
+          <div class="dock-item__scale" style=${this.sizeStyle}>
+            <slot></slot>
+          </div>
         </div>
       </li>
     `
@@ -40,8 +53,17 @@ export class DockItem extends LitElement {
   }
 
   onScaleChanged(scale: number) {
+    const sizeEl = this.shadowRoot?.querySelector('.dock-item')
+    const scaleEl = this.shadowRoot?.querySelector('.dock-item__scale')
     anime({
-      targets: this.shadowRoot?.querySelector('.dock-item__scale'),
+      targets: sizeEl,
+      width: `${this.size * scale}px`,
+      height: `${this.size * scale}px`,
+      duration: 100,
+      easing: this.easing,
+    })
+    anime({
+      targets: scaleEl,
       scale,
       duration: 100,
       easing: this.easing,
@@ -50,10 +72,29 @@ export class DockItem extends LitElement {
 
   static styles = css`
     li.dock-item {
+      position: relative;
+    }
+    li.dock-item .dock-item__pos {
       position: absolute;
       left: 50%;
       top: 50%;
       transform: translateX(-50%) translateY(-50%) scale(var(--scale, 1));
+    }
+    li::before,
+    li::after {
+      content: "";
+      width: var(--gap, 0px);
+      height: 100%;
+      position: absolute;
+      top: 0;
+      /* For debug */
+      /* background: red; */
+    }
+    li::before {
+      right: 100%
+    }
+    li::after {
+      left: 100%;
     }
     .dock-item__scale {
       display: flex;

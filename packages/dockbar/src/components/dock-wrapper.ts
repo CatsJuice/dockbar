@@ -1,6 +1,5 @@
 import { LitElement, css, html } from 'lit'
 import { customElement, property } from 'lit/decorators.js'
-import anime from 'animejs/lib/anime.es.js'
 
 export type DockPosition = 'top' | 'right' | 'bottom' | 'left'
 export type DockDirection = 'horizontal' | 'vertical'
@@ -54,12 +53,6 @@ export class DockWrapper extends LitElement {
     this._children = nodes.filter(
       (node: any) => node.nodeName.toUpperCase() === 'DOCK-ITEM',
     )
-    this._children.forEach((element: any) => {
-      element.style.setProperty('flex-shrink', '0')
-      element.style.setProperty('display', 'flex')
-      element.style.setProperty('position', 'relative')
-    })
-    this.onSizeChanged(this.size)
     this.onWillChangeChanged(this.willChange)
     this.observe()
     this.provideSharedProps()
@@ -104,13 +97,6 @@ export class DockWrapper extends LitElement {
 
   resetAll() {
     this._children.forEach((child) => {
-      anime({
-        targets: child,
-        width: `${this.size}px`,
-        height: `${this.size}px`,
-        duration: 100,
-        easing: this.easing,
-      })
       child.setAttribute('scale', '1')
     })
   }
@@ -152,13 +138,6 @@ export class DockWrapper extends LitElement {
         = distance > this.maxRange
           ? 1
           : 1 + (this.maxScale - 1) * (1 - distance / this.maxRange)
-      anime({
-        targets: child,
-        width: `${this.size * scale}px`,
-        height: `${this.size * scale}px`,
-        duration: 100,
-        easing: this.easing,
-      })
       child.setAttribute('scale', `${scale}`)
     })
   }
@@ -203,14 +182,7 @@ export class DockWrapper extends LitElement {
     this._children?.forEach((el) => {
       el.setAttribute('size', `${this.size}`)
       el.setAttribute('easing', `${this.easing}`)
-    })
-  }
-
-  onSizeChanged(size: number) {
-    this.provideSharedProps()
-    this._children.forEach((child) => {
-      child.style.setProperty('width', `${size}px`)
-      child.style.setProperty('height', `${size}px`)
+      el.setAttribute('gap', `${this.gap}`)
     })
   }
 
@@ -219,8 +191,8 @@ export class DockWrapper extends LitElement {
       setTimeout(this.onResize.bind(this))
     if (changedProperties.has('willChange'))
       this.onWillChangeChanged(this.willChange)
-    if (changedProperties.has('size'))
-      this.onSizeChanged(this.size)
+    if (['size', 'gap', 'easing'].some(key => changedProperties.has(key)))
+      this.provideSharedProps()
   }
 
   static styles = css`
