@@ -253,6 +253,9 @@ importers:
       '@iconify-json/logos':
         specifier: ^1.1.33
         version: registry.npmmirror.com/@iconify-json/logos@1.1.33
+      '@iconify-json/mdi':
+        specifier: ^1.1.52
+        version: registry.npmmirror.com/@iconify-json/mdi@1.1.52
       '@iconify-json/mingcute':
         specifier: ^1.1.7
         version: registry.npmmirror.com/@iconify-json/mingcute@1.1.7
@@ -2924,6 +2927,14 @@ packages:
     resolution: {integrity: sha512-XHnob/dyib1oCaHZV0yRLXUfGQAr46pTuO/Y+jx9ImVBVb5jyZfJ+PLgro5pp8fyQkXWV2vq7pdR0yP5s4gcvg==, registry: https://registry.npm.taobao.org/, tarball: https://registry.npmmirror.com/@iconify-json/logos/-/logos-1.1.33.tgz}
     name: '@iconify-json/logos'
     version: 1.1.33
+    dependencies:
+      '@iconify/types': registry.npmmirror.com/@iconify/types@2.0.0
+    dev: true
+
+  registry.npmmirror.com/@iconify-json/mdi@1.1.52:
+    resolution: {integrity: sha512-tLzpFcmoGw1/jHcl+BshUd4bqvP4755OUluaARsuKskTp2aIPIAkRQOhzJGpry9CZ0i82z0alq4HrKrp9uvj4A==, registry: https://registry.npm.taobao.org/, tarball: https://registry.npmmirror.com/@iconify-json/mdi/-/mdi-1.1.52.tgz}
+    name: '@iconify-json/mdi'
+    version: 1.1.52
     dependencies:
       '@iconify/types': registry.npmmirror.com/@iconify/types@2.0.0
     dev: true

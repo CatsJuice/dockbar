@@ -1,4 +1,6 @@
 <script lang="ts" setup>
+import { swingUp } from '../../anims/swing-up'
+
 const bgStyle = {
   backgroundImage: 'url("/lofi/lofi-bg@0.5x.webp")',
   borderRadius: 'inherit',
@@ -6,15 +8,24 @@ const bgStyle = {
 const lofiCD = {
   backgroundImage: 'url("/lofi/lofi-cd@0.5x.webp")',
 }
+
+const $swing1 = ref<HTMLElement>()
+const hovered = ref(false)
+
+swingUp({
+  target: $swing1,
+})
 </script>
 
 <template>
   <div
     class="group bg"
     :style="bgStyle"
-
     relative full bg-no-repeat bg-center bg-cover z-2
+    @mouseenter="hovered = true"
+    @mouseleave="hovered = false"
   >
+    <MusicAnim absolute right="1/2" top="0" :playing="hovered" />
     <div
       class="cd"
       w="2.8/5" h="2.8/5"
