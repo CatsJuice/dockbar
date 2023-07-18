@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 import { useCode } from '../composables/code'
 import CodeBox from '~/components/CodeBox.vue'
+import dockbarSvg from '~/assets/dockbar.svg?raw'
 
 const code = useCode()
 const $el = ref<HTMLElement>()
@@ -32,7 +33,7 @@ const installCodes = [
 <template>
   <div
     ref="$el"
-    overflow-hidden full p2 justify-between flex rounded-inherit flex-nowrap gap-2
+    full overflow-hidden p2 justify-between flex rounded-inherit flex-nowrap gap-2
     :style="{
       // paddingBottom: `${config.size / 2 + 5 + config.padding}px`,
       flexDirection: wrap ? 'column' : 'row',
@@ -53,7 +54,8 @@ const installCodes = [
         :class="wrap ? ['items-center'] : []"
       >
         <MagicCard w-100px>
-          <img w-100px src="/dockbar.svg">
+          <!-- <img w-100px src="/dockbar.svg"> -->
+          <div w-100px h-100px v-html="dockbarSvg" />
         </MagicCard>
         <h1 font-bold text-3xl mt-4>
           Dockbar
