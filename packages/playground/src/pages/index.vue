@@ -13,25 +13,27 @@ const dockStyle = computed(() => {
   if (config.position === 'bottom')
     return { 'top': `${bottom.value}px`, '--translate-y': '-50%' }
   if (config.position === 'top')
-    return { 'top': `${top.value}px`, '--translate-y': '50%' }
+    return { 'top': `${top.value}px`, '--translate-y': '-50%' }
   if (config.position === 'left')
     return { 'left': `${left.value}px`, '--translate-x': '-50%' }
   if (config.position === 'right')
-    return { 'right': `${right.value}px`, '--translate-x': '50%' }
+    return { 'left': `${right.value}px`, '--translate-x': '-50%' }
   return {}
 })
 </script>
 
 <template>
-  <div flex-center full>
+  <div full flex-center>
     <StyleTab
       class="!fixed"
       top="1/2"
       translate-y="-1/2" translate-x="-80px" :style="{ left: `${left}px` }"
     />
-    <VisionosWindow ref="$window" width="80vw" height="80vh" relative max-w-1200px>
-      <Home />
-    </VisionosWindow>
+    <div ref="$window">
+      <VisionosWindow width="80vw" height="80vh" relative max-w-1200px>
+        <Home />
+      </VisionosWindow>
+    </div>
   </div>
   <client-only>
     <Dock :style="dockStyle" fixed />
