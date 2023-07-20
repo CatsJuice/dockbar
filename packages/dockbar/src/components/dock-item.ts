@@ -16,6 +16,9 @@ export class DockItem extends LitElement {
   @property({ type: Number })
   gap = 8
 
+  @property({ type: String })
+  direction = 'horizontal'
+
   get sizeStyle() {
     const styleObj = {
       width: `${this.size}px`,
@@ -35,9 +38,13 @@ export class DockItem extends LitElement {
     return `${this.sizeStyle};${this.gapStyle}`
   }
 
+  get className() {
+    return `${this.direction} dock-item`
+  }
+
   render() {
     return html`
-      <li class="dock-item" style=${this.liStyle}>
+      <li class=${this.className} style=${this.liStyle}>
         <div class="dock-item__pos">
           <div class="dock-item__scale" style=${this.sizeStyle}>
             <slot></slot>
@@ -83,18 +90,33 @@ export class DockItem extends LitElement {
     li::before,
     li::after {
       content: "";
-      width: var(--gap, 0px);
-      height: 100%;
       position: absolute;
-      top: 0;
       /* For debug */
       /* background: red; */
     }
-    li::before {
+    li.horizontal::before,
+    li.horizontal::after {
+      width: var(--gap, 0px);
+      height: 100%;
+      top: 0;
+    }
+    li.horizontal::before {
       right: 100%
     }
-    li::after {
+    li.horizontal::after {
       left: 100%;
+    }
+    li.vertical::before,
+    li.vertical::after {
+      width: 100%;
+      height: var(--gap, 0px);
+      left: 0;
+    }
+    li.vertical::before {
+      bottom: 100%;
+    }
+    li.vertical::after {
+      top: 100%;
     }
     .dock-item__scale {
       display: flex;
