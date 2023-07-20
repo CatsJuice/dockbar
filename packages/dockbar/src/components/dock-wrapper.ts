@@ -183,6 +183,7 @@ export class DockWrapper extends LitElement {
       el.setAttribute('size', `${this.size}`)
       el.setAttribute('easing', `${this.easing}`)
       el.setAttribute('gap', `${this.gap}`)
+      el.setAttribute('direction', `${this.direction}`)
     })
   }
 
@@ -191,7 +192,7 @@ export class DockWrapper extends LitElement {
       setTimeout(this.onResize.bind(this))
     if (changedProperties.has('willChange'))
       this.onWillChangeChanged(this.willChange)
-    if (['size', 'gap', 'easing'].some(key => changedProperties.has(key)))
+    if (['size', 'gap', 'easing', 'direction'].some(key => changedProperties.has(key)))
       this.provideSharedProps()
   }
 
