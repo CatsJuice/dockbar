@@ -5288,7 +5288,7 @@ packages:
       vite: ^4.0.0
       vue: ^3.2.25
     dependencies:
-      vite: registry.npmmirror.com/vite@4.4.3(@types/node@18.16.19)(sass@1.63.6)
+      vite: registry.npmmirror.com/vite@4.4.3(@types/node@20.4.1)(sass@1.63.6)
       vue: registry.npmmirror.com/vue@3.3.4
     dev: true
 
@@ -17451,7 +17451,7 @@ packages:
       debug: registry.npmmirror.com/debug@4.3.4(supports-color@8.1.1)
       fast-glob: registry.npmmirror.com/fast-glob@3.3.0
       pretty-bytes: registry.npmmirror.com/pretty-bytes@6.1.0
-      vite: registry.npmmirror.com/vite@4.4.3(@types/node@18.16.19)(sass@1.63.6)
+      vite: registry.npmmirror.com/vite@4.4.3(@types/node@20.4.1)(sass@1.63.6)
       workbox-build: registry.npmmirror.com/workbox-build@7.0.0
       workbox-window: registry.npmmirror.com/workbox-window@7.0.0
     transitivePeerDependencies:
@@ -17542,7 +17542,7 @@ packages:
       kolorist: registry.npmmirror.com/kolorist@1.8.0
       magic-string: registry.npmmirror.com/magic-string@0.30.1
       shell-quote: registry.npmmirror.com/shell-quote@1.8.1
-      vite: registry.npmmirror.com/vite@4.4.3(@types/node@18.16.19)(sass@1.63.6)
+      vite: registry.npmmirror.com/vite@4.4.3(@types/node@20.4.1)(sass@1.63.6)
     transitivePeerDependencies:
       - supports-color
     dev: true
