@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import 'dockbar'
+import 'dockbar/dist'
 import { isDark } from '../../composables/dark'
 
 const buttons = computed(() => [
@@ -56,7 +56,7 @@ const buttons = computed(() => [
           :is="btn.icon ? 'dock-item' : 'div'"
           v-for="(btn, i) in buttons"
           :key="i"
-          :class="{ 'self-center': !btn.icon }"
+          :style="!btn.icon ? 'align-self: center' : ''"
         >
           <div v-if="btn.icon">
             <component
@@ -70,7 +70,7 @@ const buttons = computed(() => [
             </component>
           </div>
 
-          <div v-else pointer-events-none bg="white/40" class="separator" />
+          <div v-else :style="{ '--size': `${config.size / 2}px` }" pointer-events-none bg="white/40" class="separator" />
         </component>
       </dock-wrapper>
     </LightBorderFrame>
@@ -126,10 +126,10 @@ const buttons = computed(() => [
 
 .dock.horizontal .separator {
   width: 1px;
-  height: 20px;
+  height: var(--size);
 }
 .dock.vertical .separator {
-  width: 20px;
+  width: var(--size);
   height: 1px;
 }
 </style>

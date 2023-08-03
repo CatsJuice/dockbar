@@ -15,6 +15,10 @@
     ".": {
       "types": "./types/index.d.ts",
       "import": "./dockbar.js"
+    },
+    "./dist": {
+      "types": "./dist/types/index.d.ts",
+      "import": "./dist/dockbar.js"
     }
   },
   "main": "./dockbar.js",

@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import 'dockbar'
+import 'dockbar/dist'
 
 const svgPromises = import.meta.glob('~/assets/rauno/*.svg', { as: 'raw' })
 const svgLib: Record<string, string> = reactive({})

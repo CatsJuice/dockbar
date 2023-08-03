@@ -21,11 +21,10 @@ const style = computed(() => ({
 <template>
   <div ref="$el" relative :style="style" class="light-border-frame">
     <svg
-      absolute top-0 left-0
       :width="width" :height="height"
       :view-box="`0 0 ${width} ${height}`"
       xmlns="http://www.w3.org/2000/svg"
-      pointer-events-none
+      pointer-events-none absolute top-0 left-0
     >
       <rect
         :x="borderWidth / 2"
