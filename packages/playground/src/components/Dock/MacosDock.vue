@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import 'dockbar'
+import 'dockbar/dist'
 
 const apps = [
   {

@@ -4,9 +4,6 @@
   "version": "0.1.5",
   "description": "A macOS-like dock made with Web-Components",
   "license": "MIT",
-  "files": [
-    "dist"
-  ],
   "keywords": [
     "macOS",
     "dock",
@@ -16,13 +13,17 @@
   "repository": "https://github.com/catsjuice/dockbar/",
   "exports": {
     ".": {
+      "types": "./types/index.d.ts",
+      "import": "./dockbar.js"
+    },
+    "./dist": {
       "types": "./dist/types/index.d.ts",
       "import": "./dist/dockbar.js"
     }
   },
-  "main": "./dist/dockbar.js",
-  "module": "./dist/dockbar.js",
-  "types": "./dist/types/index.d.ts",
+  "main": "./dockbar.js",
+  "module": "./dockbar.js",
+  "types": "./types/index.d.ts",
   "scripts": {
     "postinstall": "npx simple-git-hooks",
     "dev": "cd packages/dockbar && pnpm dev",
