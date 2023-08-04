@@ -106,7 +106,7 @@ async function publish() {
     },
   ])
   if (response.value) {
-    execSync("npm publish ./dist --registry https://registry.npmjs.org")
+    execSync("npm publish --registry https://registry.npmjs.org")
   }
 }
 
