@@ -118,8 +118,9 @@ async function outputSize() {
 if (isPublishing) prepareForPublishing()
 await clean()
 await build()
-await addPackageJSON()
-await addAssets()
+// this is not needed due to #11(https://github.com/CatsJuice/dockbar/pull/11)
+// await addPackageJSON()
+// await addAssets()
 await outputSize()
 if (isPublishing) await publish()
 
