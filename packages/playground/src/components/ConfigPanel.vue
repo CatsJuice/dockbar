@@ -12,7 +12,7 @@ onMounted(() => {
     options: {
       top: 'top', right: 'right', bottom: 'bottom', left: 'left',
     },
-  }).on('change', ({ value }) => {
+  }).on('change', ({ value }: { value: string }) => {
     config.direction = (value === 'top' || value === 'bottom') ? 'horizontal' : 'vertical'
   })
   pane.addInput(config, 'disabled')

@@ -22,6 +22,7 @@ export default defineConfig({
     }),
     presetTypography(),
     presetWebFonts({
+      inlineImports: false,
       fonts: {
         sans: 'DM Sans',
         serif: 'DM Serif Display',

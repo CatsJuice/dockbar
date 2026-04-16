@@ -1,3 +1,4 @@
+import path from 'node:path'
 import { pwa } from './config/pwa'
 import { appDescription } from './constants/index'
 
@@ -22,6 +23,20 @@ export default defineNuxtConfig({
   css: [
     '@unocss/reset/tailwind.css',
   ],
+
+  alias: {
+    dockbar: path.resolve(__dirname, '../../packages/dockbar/src/index.ts'),
+  },
+
+  vite: {
+    vue: {
+      template: {
+        compilerOptions: {
+          isCustomElement: tag => tag.startsWith('dock-'),
+        },
+      },
+    },
+  },
 
   colorMode: {
     classSuffix: '',

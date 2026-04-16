@@ -1,6 +1,6 @@
 import { LitElement, css, html } from 'lit'
 import { customElement, property } from 'lit/decorators.js'
-import anime from 'animejs/lib/anime.es.js'
+import { animate } from 'animejs'
 
 @customElement('dock-item')
 export class DockItem extends LitElement {
@@ -59,21 +59,34 @@ export class DockItem extends LitElement {
       this.onScaleChanged(this.scale)
   }
 
+  get animationEase() {
+    if (this.easing.startsWith('cubicBezier('))
+      return this.easing.replace('cubicBezier(', 'cubic-bezier(')
+
+    if (this.easing.startsWith('ease') && this.easing.length > 4) {
+      const name = this.easing.slice(4)
+      return `${name.slice(0, 1).toLowerCase()}${name.slice(1)}`
+    }
+
+    return this.easing
+  }
+
   onScaleChanged(scale: number) {
     const sizeEl = this.shadowRoot?.querySelector('.dock-item')
     const scaleEl = this.shadowRoot?.querySelector('.dock-item__scale')
-    anime({
-      targets: sizeEl,
+    if (!sizeEl || !scaleEl)
+      return
+
+    animate(sizeEl, {
       width: `${this.size * scale}px`,
       height: `${this.size * scale}px`,
       duration: 100,
-      easing: this.easing,
+      ease: this.animationEase,
     })
-    anime({
-      targets: scaleEl,
+    animate(scaleEl, {
       scale,
       duration: 100,
-      easing: this.easing,
+      ease: this.animationEase,
     })
   }
 

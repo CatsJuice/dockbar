@@ -9,7 +9,10 @@
     "jsx": "preserve",
     "skipLibCheck": true,
     "isolatedModules": true,
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
+    "experimentalDecorators": true,
+    "useDefineForClassFields": false,
+    "allowImportingTsExtensions": true,
     "resolveJsonModule": true,
     "noUnusedLocals": true,
     "strictNullChecks": true,
@@ -18,22 +21,13 @@
     "types": [
       "vitest",
       "vite/client",
-      "vue/ref-macros",
       "vite-plugin-pages/client",
-      "vite-plugin-vue-component-preview/client",
       "vite-plugin-vue-layouts/client",
-      "vite-plugin-pwa/client",
-      "unplugin-vue-macros/macros-global"
+      "vite-plugin-pwa/client"
     ],
     "paths": {
       "~/*": ["src/*"]
     }
-  },
-  "vueCompilerOptions": {
-    "plugins": [
-      "@vue-macros/volar/define-models",
-      "@vue-macros/volar/define-slots"
-    ]
   },
   "exclude": ["dist", "node_modules", "cypress"]
 }

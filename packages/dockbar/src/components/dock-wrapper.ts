@@ -42,7 +42,7 @@ export class DockWrapper extends LitElement {
   willChange = false
 
   @property({ type: String })
-  easing = 'cubicBezier(0, 0.55, 0.45, 1)'
+  easing = 'cubic-bezier(0, 0.55, 0.45, 1)'
 
   constructor() {
     super()

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import 'dockbar/dist'
+import 'dockbar'
 import { isDark } from '../../composables/dark'
 
 const buttons = computed(() => [

@@ -8,7 +8,6 @@ const props = defineProps<Props>()
 const size = (v: number | string) => typeof v === 'number' || /^\d+$/.test(v) ? `${v}px` : `${v}`
 const isActive = ref(false)
 const zIndex = ref<number | undefined>(undefined)
-const dragHandle = ref<HTMLElement>()
 const offset = ref({ x: 0, y: 0 })
 const dragStartPos = { x: 0, y: 0 }
 const dragging = ref(false)
@@ -60,12 +59,11 @@ defineExpose({ active, isActive })
 <template>
   <div
     left="1/2" top="1/2"
-    class="window-frame" fixed bg-white rounded-12px dark:bg-dark-8
-    transition-background-color duration-1000
+    class="window-frame"
+    bg-white fixed rounded-12px dark:bg-dark-8 transition-background-color duration-1000
     :style="style"
   >
     <header
-      ref="dragHandle"
       absolute
       top-0
       pt-3 px-3 w-full

@@ -4,12 +4,14 @@ import type { FolderApi } from 'tweakpane'
 
 // export const fps = useFps()
 
-let pane: Pane
+type PaneApi = Pane & Pick<FolderApi, 'addInput' | 'addFolder' | 'remove'>
 
-function init(container: HTMLElement | undefined): Pane | undefined {
+let pane: PaneApi
+
+function init(container: HTMLElement | undefined): PaneApi | undefined {
   if (!isClient || pane)
     return
-  pane = new Pane({ title: 'Debug Pane', container })
+  pane = new Pane({ title: 'Debug Pane', container }) as PaneApi
   return pane
 }
 
