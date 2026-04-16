@@ -43,6 +43,7 @@ const buttons = computed(() => [
   <div class="dock">
     <LightBorderFrame :radius="20" :border-width="1.2">
       <dock-wrapper
+        :allow-drag-delete="config.allowDragDelete"
         :size="config.size"
         :padding="config.padding"
         :gap="config.gap"
@@ -51,6 +52,7 @@ const buttons = computed(() => [
         :disabled="config.disabled"
         :direction="config.direction"
         :position="config.position"
+        :sortable="config.sortable"
       >
         <component
           :is="btn.icon ? 'dock-item' : 'div'"

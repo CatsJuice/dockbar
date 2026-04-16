@@ -16,6 +16,8 @@ onMounted(() => {
     config.direction = (value === 'top' || value === 'bottom') ? 'horizontal' : 'vertical'
   })
   pane.addInput(config, 'disabled')
+  pane.addInput(config, 'sortable')
+  pane.addInput(config, 'allowDragDelete')
 })
 </script>
 

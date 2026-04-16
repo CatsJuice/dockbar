@@ -27,7 +27,13 @@ function html({ head, body }: { head: string; body: string }) {
   ])
 }
 function tag(tagName: string, code: string | string[], attrs: Record<string, any> = {}) {
-  const attrsArr = Object.entries(attrs).map(([key, value]) => `${key}="${value}"`)
+  const attrsArr = Object.entries(attrs).flatMap(([key, value]) => {
+    if (value === false || value == null)
+      return []
+    if (value === true)
+      return [key]
+    return [`${key}="${value}"`]
+  })
   const lines = (Array.isArray(code) ? code : [code]).filter(Boolean)
 
   if (attrsArr.length > 3) {
@@ -81,6 +87,8 @@ export function useCode() {
       'gap': config.gap,
       'max-scale': config.maxScale,
       'max-range': config.maxRange,
+      'sortable': config.sortable,
+      'allow-drag-delete': config.allowDragDelete,
       'disabled': config.disabled,
       'direction': config.direction,
       'position': config.position,

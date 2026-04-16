@@ -91,6 +91,10 @@ export class DockItem extends LitElement {
   }
 
   static styles = css`
+    :host {
+      display: block;
+      flex: 0 0 auto;
+    }
     li.dock-item {
       position: relative;
     }

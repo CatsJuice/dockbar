@@ -46,6 +46,7 @@ const apps = [
   <div class="dock">
     <LightBorderFrame :border-width="1" radius="16">
       <dock-wrapper
+        :allow-drag-delete="config.allowDragDelete"
         :size="config.size"
         :padding="config.padding"
         :gap="config.gap"
@@ -54,6 +55,7 @@ const apps = [
         :disabled="config.disabled"
         :direction="config.direction"
         :position="config.position"
+        :sortable="config.sortable"
       >
         <dock-item v-for="app in apps" :key="app.icon">
           <a class="dock-item" flex="~ center" :href="app.href" target="_blank">
