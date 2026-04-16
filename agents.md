@@ -21,3 +21,4 @@ Notes for future agents:
 
 - Prefer `ARCHITECTURE.md` and the root `README.md` over `packages/playground/README.md` or `packages/playground/README.zh-CN.md`.
 - The playground README files are inherited template docs and are not authoritative project documentation for Dockbar itself.
+- If you change any public API surface of the package, including parameters, attributes, events, or usage behavior that users need to know, update the root `README.md` in the same change.

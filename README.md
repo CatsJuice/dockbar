@@ -94,6 +94,32 @@ Apply `class` to `dock-wrapper` and `dock-item` and customize your own style.
 
 For more, see [Configuration](#configuration).
 
+### Sortable dock
+
+Set `sortable` to enable drag reordering. Set `allow-drag-delete` if dropping an item outside the dock should emit a delete event instead of snapping back.
+
+```html
+<dock-wrapper id="dock" sortable allow-drag-delete>
+  <dock-item data-id="launchpad">Launchpad</dock-item>
+  <dock-item data-id="mail">Mail</dock-item>
+  <dock-item data-id="music">Music</dock-item>
+</dock-wrapper>
+
+<script>
+  const dock = document.querySelector('#dock')
+
+  dock.addEventListener('on-sort', (event) => {
+    const { oldIndex, newIndex } = event.detail
+    console.log('sort', oldIndex, newIndex)
+  })
+
+  dock.addEventListener('on-delete', (event) => {
+    const { index, item } = event.detail
+    console.log('delete', index, item.dataset.id)
+  })
+</script>
+```
+
 
 ## Problems
 
@@ -121,16 +147,47 @@ There are some problems yet to be solved:
 
 ## Configuration
 
-| Property    | Type                                   | Default      | Description                                                                              |
-| ----------- | -------------------------------------- | ------------ | ---------------------------------------------------------------------------------------- |
-| `size`      | `number`                               | `40`         | The size of `dock-item` in `px`, see [Sizes](#sizes)                                     |
-| `padding`   | `number`                               | `8`          | The padding of `dock-wrapper` in `px`, see [Sizes](#sizes)                               |
-| `gap`       | `number`                               | `8`          | The gap between `dock-item` in `px`, see [Sizes](#sizes)                                 |
-| `maxScale`  | `number`                               | `2`          | The max scale of `dock-item`, see [Sizes](#sizes)                                        |
-| `maxRange`  | `number`                               | `200`        | The max range of `dock-item` that will scale when mouseover in `px`, see [Sizes](#sizes) |
-| `disabled`  | `boolean`                              | `false`      | Disable the scale effect                                                                 |
-| `direction` | `horizontal` \| `vertical`             | `horizontal` | The direction of `dock-item`s                                                            |
-| `position`  | `top` \| `bottom` \| `left` \| `right` | `bottom`     | The position of `dock-wrapper`, will affect the scale origin                             |
+| Property | Type | Default | Description |
+| -------- | ---- | ------- | ----------- |
+| `size` | `number` | `40` | The base size of `dock-item` in `px`, see [Sizes](#sizes) |
+| `padding` | `number` | `8` | The padding of `dock-wrapper` in `px`, see [Sizes](#sizes) |
+| `gap` | `number` | `8` | The gap between `dock-item`s in `px`, see [Sizes](#sizes) |
+| `maxScale` | `number` | `2` | The max scale of `dock-item`, see [Sizes](#sizes) |
+| `maxRange` | `number` | `200` | The max hover range in `px` that participates in the scale effect |
+| `disabled` | `boolean` | `false` | Disable the hover scale effect |
+| `direction` | `horizontal` \| `vertical` | `horizontal` | The layout direction of `dock-item`s |
+| `position` | `top` \| `bottom` \| `left` \| `right` | `bottom` | The dock position, which affects the scale origin |
+| `easing` | `string` | `cubic-bezier(0, 0.55, 0.45, 1)` | The easing used by dock-item scale animation |
+| `sortable` | `boolean` | `false` | Enable drag reordering for dock items |
+| `allow-drag-delete` | `boolean` | `false` | When `sortable` is enabled, allow dropping an item outside the dock to emit a delete event |
+| `will-change` | `boolean` | `false` | Apply `will-change` hints to dock items for width and height |
+
+## Events
+
+### `on-sort`
+
+Emitted after a sortable drag ends with a changed order.
+
+```ts
+type DockSortDetail = {
+  item: HTMLElement
+  oldIndex: number
+  newIndex: number
+}
+```
+
+### `on-delete`
+
+Emitted when `allow-drag-delete` is enabled and an item is released outside the dock.
+
+```ts
+type DockDeleteDetail = {
+  item: HTMLElement
+  index: number
+}
+```
+
+The component only emits the event. Removing the item from your application state is the responsibility of the parent app.
 
 
 ### Sizes
