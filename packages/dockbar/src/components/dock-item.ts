@@ -71,11 +71,26 @@ export class DockItem extends LitElement {
     return this.easing
   }
 
+  get isPreview() {
+    return this.hasAttribute('data-dock-preview')
+  }
+
+  get previewSizeStyle() {
+    const previewSize = this.size * this.scale
+    return `width: ${previewSize}px;height: ${previewSize}px;`
+  }
+
   onScaleChanged(scale: number) {
     const sizeEl = this.shadowRoot?.querySelector('.dock-item')
     const scaleEl = this.shadowRoot?.querySelector('.dock-item__scale')
     if (!sizeEl || !scaleEl)
       return
+
+    if (this.isPreview) {
+      sizeEl.setAttribute('style', `${this.previewSizeStyle};${this.gapStyle}`)
+      scaleEl.setAttribute('style', `${this.sizeStyle};transform: scale(${scale});`)
+      return
+    }
 
     animate(sizeEl, {
       width: `${this.size * scale}px`,
@@ -96,6 +111,9 @@ export class DockItem extends LitElement {
       flex: 0 0 auto;
     }
     li.dock-item {
+      list-style: none;
+      margin: 0;
+      padding: 0;
       position: relative;
     }
     li.dock-item .dock-item__pos {

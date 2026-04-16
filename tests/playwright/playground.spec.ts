@@ -68,6 +68,87 @@ test('sortable dock reorders items when dragging across the dock', async ({ page
   await expect(page.locator('#sortable-order')).toHaveText('2,3,4,5,1')
 })
 
+test('sortable dock keeps the source visible and moves a drag preview', async ({ page }) => {
+  await page.goto('/sortable')
+  await waitForDockUpgrade(page, '#sortable-dock')
+
+  const firstDockItem = page.locator('#sortable-dock dock-item').first()
+  const box = await firstDockItem.boundingBox()
+  if (!box)
+    throw new Error('Missing first dock item')
+
+  const requestedOffset = {
+    x: Math.round(box.width * 0.28),
+    y: Math.round(box.height * 0.73),
+  }
+  const startX = box.x + requestedOffset.x
+  const startY = box.y + requestedOffset.y
+  const dragPoint = {
+    x: startX + 24,
+    y: startY - 8,
+  }
+  const movedPoint = {
+    x: startX + 96,
+    y: startY - 8,
+  }
+
+  await page.mouse.move(startX, startY)
+  await expect.poll(async () => {
+    const hovered = await firstDockItem.boundingBox()
+    return hovered?.width ?? 0
+  }).toBeGreaterThan(box.width)
+
+  const hoveredBox = await firstDockItem.boundingBox()
+  if (!hoveredBox)
+    throw new Error('Missing hovered dock item')
+
+  const pointerOffset = {
+    x: startX - hoveredBox.x,
+    y: startY - hoveredBox.y,
+  }
+
+  await page.mouse.down()
+  await page.mouse.move(dragPoint.x, dragPoint.y, { steps: 6 })
+
+  const preview = page.locator('[data-dock-preview]')
+  await expect(preview).toBeVisible()
+  await expect(firstDockItem).toBeVisible()
+
+  const previewStyle = await preview.evaluate((element) => {
+    if (!(element instanceof HTMLElement))
+      return null
+
+    return {
+      left: element.style.left,
+      top: element.style.top,
+      transformOrigin: element.style.transformOrigin,
+    }
+  })
+
+  const sourceBox = await firstDockItem.boundingBox()
+  const previewBox = await preview.boundingBox()
+  if (!sourceBox || !previewBox || !previewStyle)
+    throw new Error('Missing drag source or preview box')
+
+  expect(Math.abs(Number.parseFloat(previewStyle.left) - (dragPoint.x - pointerOffset.x))).toBeLessThan(8)
+  expect(Math.abs(Number.parseFloat(previewStyle.top) - (dragPoint.y - pointerOffset.y))).toBeLessThan(8)
+  expect(Math.abs(Number.parseFloat(previewStyle.transformOrigin) - pointerOffset.x)).toBeLessThan(1)
+  expect(Math.abs(Number.parseFloat(previewStyle.transformOrigin.split(' ')[1]) - pointerOffset.y)).toBeLessThan(1)
+  expect(Math.abs(previewBox.x - sourceBox.x)).toBeGreaterThan(8)
+  expect(Math.abs(previewBox.y - sourceBox.y)).toBeGreaterThan(4)
+
+  await page.mouse.move(movedPoint.x, movedPoint.y, { steps: 8 })
+
+  const movedPreviewBox = await preview.boundingBox()
+  if (!movedPreviewBox)
+    throw new Error('Missing moved drag preview box')
+
+  expect(movedPreviewBox.x).toBeGreaterThan(previewBox.x + 40)
+
+  await page.mouse.up()
+  await expect(preview).toHaveCount(0)
+})
+
 test('sortable dock deletes an item when dropped outside', async ({ page }) => {
   await page.goto('/sortable')
   await waitForDockUpgrade(page, '#sortable-dock')

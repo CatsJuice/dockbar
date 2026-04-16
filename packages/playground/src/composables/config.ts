@@ -8,5 +8,5 @@ export const config = reactive({
   maxScale: 2,
   maxRange: 200,
   position: 'bottom',
-  sortable: false,
+  sortable: true,
 })

@@ -25,6 +25,7 @@ interface DragState {
   originRect: DOMRect
   outside: boolean
   placeholder: HTMLDivElement
+  preview: DockItem | null
   pointerId: number
   pointerOffset: {
     x: number
@@ -38,7 +39,6 @@ interface DragState {
 
 const DRAG_START_DISTANCE = 6
 const DRAG_SCALE = 1.08
-const DRAG_LIFT = 12
 const REORDER_DURATION = 220
 const REORDER_EASE = 'cubic-bezier(0.22, 1, 0.36, 1)'
 const SNAP_BACK_EASE = 'cubic-bezier(0.34, 1.56, 0.64, 1)'
@@ -105,6 +105,7 @@ export class DockWrapper extends LitElement {
       originRect,
       outside: false,
       placeholder: this.createPlaceholder(originRect),
+      preview: null,
       pointerId: e.pointerId,
       pointerOffset: {
         x: e.clientX - originRect.left,
@@ -132,12 +133,12 @@ export class DockWrapper extends LitElement {
     if (!dragState.active) {
       if (Math.hypot(deltaX, deltaY) < DRAG_START_DISTANCE)
         return
-      this.beginDrag(dragState)
+      this.beginDrag(dragState, e.clientX, e.clientY)
     }
 
     e.preventDefault()
     this._suppressClick = true
-    this.updateDraggedItemPosition(dragState, e.clientX, e.clientY)
+    this.updateDragPreviewPosition(dragState, e.clientX, e.clientY)
 
     const dockRect = this.getBoundingClientRect()
     const insideDock = this.isPointInsideRect(dockRect, e.clientX, e.clientY)
@@ -249,6 +250,7 @@ export class DockWrapper extends LitElement {
 
   disconnectedCallback(): void {
     super.disconnectedCallback()
+    this._dragState?.preview?.remove()
     this.shadowRoot?.host?.removeEventListener('click', this.onHostClick as EventListener, true)
     this.shadowRoot?.host?.removeEventListener('dragstart', this.onHostDragStart as EventListener)
     this.shadowRoot?.host?.removeEventListener('mouseenter', this.onHostMouseenter as EventListener)
@@ -325,29 +327,28 @@ export class DockWrapper extends LitElement {
     })
   }
 
-  private animateDraggedItemTo(
+  private animateDragPreviewTo(
     dragState: DragState,
     rect: DOMRect,
     { ease = SNAP_BACK_EASE, onComplete }: { ease?: string; onComplete?: () => void } = {},
   ) {
-    if (!dragState.item.isConnected) {
+    if (!dragState.preview?.isConnected) {
       onComplete?.()
       return
     }
 
-    const lift = this.getLiftOffset()
     const animation = {
       duration: REORDER_DURATION,
       ease,
-      left: `${rect.left + lift.x}px`,
+      left: `${rect.left}px`,
       scale: [DRAG_SCALE, 1],
-      top: `${rect.top + lift.y}px`,
+      top: `${rect.top}px`,
     } as Record<string, unknown>
 
     if (onComplete)
       animation.onComplete = onComplete
 
-    animate(dragState.item, animation as any)
+    animate(dragState.preview, animation as any)
   }
 
   private animateLayout(items: HTMLElement[], beforeRects: Map<HTMLElement, DOMRect>) {
@@ -373,13 +374,14 @@ export class DockWrapper extends LitElement {
     })
   }
 
-  private beginDrag(dragState: DragState) {
+  private beginDrag(dragState: DragState, clientX: number, clientY: number) {
     dragState.active = true
     dragState.currentIndex = dragState.originIndex
     this._moving = true
 
     this.insertBefore(dragState.placeholder, dragState.item)
     this.prepareDraggedItem(dragState)
+    dragState.preview = this.createDragPreview(dragState, clientX, clientY)
   }
 
   private cancelDrag(dragState: DragState) {
@@ -387,12 +389,15 @@ export class DockWrapper extends LitElement {
     this.movePlaceholder(dragState.originIndex, false)
     const targetRect = dragState.placeholder.getBoundingClientRect()
     this.animateLayout(this.getVisibleDockItems(), beforeRects)
-    this.animateDraggedItemTo(dragState, targetRect, {
+    this.updateDraggedItemPosition(dragState, targetRect)
+    this.animateDragPreviewTo(dragState, targetRect, {
       onComplete: () => this.restoreDraggedItem(dragState, dragState.originIndex),
     })
   }
 
   private cleanupAfterDrag() {
+    const dragState = this._dragState
+    dragState?.preview?.remove()
     this._dragState = null
     this._moving = false
     this._mousePos = { x: 0, y: 0 }
@@ -416,6 +421,62 @@ export class DockWrapper extends LitElement {
       width: `${originRect.width}px`,
     })
     return placeholder
+  }
+
+  private createDragPreview(dragState: DragState, clientX: number, clientY: number) {
+    const preview = document.createElement('dock-item') as DockItem
+    Array.from(dragState.item.attributes).forEach(({ name, value }) => {
+      if (name === 'id' || name === 'style')
+        return
+      preview.setAttribute(name, value)
+    })
+    Array.from(dragState.item.childNodes).forEach((node) => {
+      preview.appendChild(node.cloneNode(true))
+    })
+    preview.setAttribute('aria-hidden', 'true')
+    preview.setAttribute('data-dock-preview', '')
+    this.disablePreviewAnimations(preview)
+
+    Object.assign(preview.style, {
+      animation: 'none',
+      boxSizing: 'border-box',
+      cursor: 'grabbing',
+      height: `${dragState.originRect.height}px`,
+      left: `${clientX - dragState.pointerOffset.x}px`,
+      margin: '0',
+      pointerEvents: 'none',
+      position: 'fixed',
+      top: `${clientY - dragState.pointerOffset.y}px`,
+      transform: `scale(${DRAG_SCALE})`,
+      transformOrigin: `${dragState.pointerOffset.x}px ${dragState.pointerOffset.y}px`,
+      transition: 'none',
+      width: `${dragState.originRect.width}px`,
+      zIndex: '10000',
+    })
+
+    document.body.appendChild(preview)
+    return preview
+  }
+
+  private disablePreviewAnimations(root: ParentNode) {
+    const elements: Element[] = []
+    if (root instanceof Element)
+      elements.push(root)
+
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_ELEMENT)
+    let current = walker.nextNode()
+    while (current) {
+      if (current instanceof Element)
+        elements.push(current)
+      current = walker.nextNode()
+    }
+
+    elements.forEach((element) => {
+      if (!(element instanceof HTMLElement || element instanceof SVGElement))
+        return
+      element.style.setProperty('animation', 'none', 'important')
+      element.style.setProperty('transition', 'none', 'important')
+    })
   }
 
   private dispatchDelete(dragState: DragState) {
@@ -456,7 +517,7 @@ export class DockWrapper extends LitElement {
       duration: 160,
       ease: DELETE_EASE,
       opacity: [1, 0],
-      scale: [DRAG_SCALE, 0.9],
+      scale: [1, 0.9],
       onComplete: () => {
         dragState.placeholder.remove()
         this.resetDraggedItemStyle(dragState.item)
@@ -464,11 +525,21 @@ export class DockWrapper extends LitElement {
         this.cleanupAfterDrag()
       },
     })
+
+    if (dragState.preview?.isConnected) {
+      animate(dragState.preview, {
+        duration: 160,
+        ease: DELETE_EASE,
+        opacity: [1, 0],
+        scale: [DRAG_SCALE, 0.9],
+      })
+    }
   }
 
   private finishSort(dragState: DragState) {
     const targetRect = dragState.placeholder.getBoundingClientRect()
-    this.animateDraggedItemTo(dragState, targetRect, {
+    this.updateDraggedItemPosition(dragState, targetRect)
+    this.animateDragPreviewTo(dragState, targetRect, {
       onComplete: () => this.restoreDraggedItem(dragState, dragState.currentIndex),
     })
   }
@@ -502,19 +573,6 @@ export class DockWrapper extends LitElement {
     return items.length
   }
 
-  private getLiftOffset() {
-    switch (this.position) {
-      case 'top':
-        return { x: 0, y: DRAG_LIFT }
-      case 'left':
-        return { x: DRAG_LIFT, y: 0 }
-      case 'right':
-        return { x: -DRAG_LIFT, y: 0 }
-      default:
-        return { x: 0, y: -DRAG_LIFT }
-    }
-  }
-
   private getVisibleDockItems() {
     const draggedItem = this._dragState?.item
     return this.getDockItems().filter(item => item !== draggedItem && item.style.display !== 'none')
@@ -529,6 +587,7 @@ export class DockWrapper extends LitElement {
     dragState.outside = false
     this.movePlaceholder(this.getInsertionIndex(clientX, clientY), false)
     this.animateLayout(this.getVisibleDockItems(), beforeRects)
+    this.updateDraggedItemPosition(dragState, dragState.placeholder.getBoundingClientRect())
     this.applyHoverScale(clientX, clientY)
   }
 
@@ -609,18 +668,16 @@ export class DockWrapper extends LitElement {
   }
 
   private prepareDraggedItem(dragState: DragState) {
-    const lift = this.getLiftOffset()
     Object.assign(dragState.item.style, {
       boxSizing: 'border-box',
       cursor: 'grabbing',
       height: `${dragState.originRect.height}px`,
-      left: `${dragState.originRect.left + lift.x}px`,
+      left: `${dragState.originRect.left}px`,
       margin: '0',
       pointerEvents: 'none',
       position: 'fixed',
-      top: `${dragState.originRect.top + lift.y}px`,
-      transform: `scale(${DRAG_SCALE})`,
-      transformOrigin: 'center center',
+      top: `${dragState.originRect.top}px`,
+      transition: `left ${REORDER_DURATION}ms ${REORDER_EASE}, top ${REORDER_DURATION}ms ${REORDER_EASE}`,
       width: `${dragState.originRect.width}px`,
       zIndex: '9999',
     })
@@ -657,6 +714,7 @@ export class DockWrapper extends LitElement {
     item.style.removeProperty('top')
     item.style.removeProperty('transform')
     item.style.removeProperty('transform-origin')
+    item.style.removeProperty('transition')
     item.style.removeProperty('width')
     item.style.removeProperty('z-index')
   }
@@ -681,10 +739,17 @@ export class DockWrapper extends LitElement {
     this._children = source.filter((node): node is DockItem => node.nodeName.toUpperCase() === 'DOCK-ITEM')
   }
 
-  private updateDraggedItemPosition(dragState: DragState, clientX: number, clientY: number) {
-    const lift = this.getLiftOffset()
-    dragState.item.style.left = `${clientX - dragState.pointerOffset.x + lift.x}px`
-    dragState.item.style.top = `${clientY - dragState.pointerOffset.y + lift.y}px`
+  private updateDragPreviewPosition(dragState: DragState, clientX: number, clientY: number) {
+    if (!dragState.preview)
+      return
+
+    dragState.preview.style.left = `${clientX - dragState.pointerOffset.x}px`
+    dragState.preview.style.top = `${clientY - dragState.pointerOffset.y}px`
+  }
+
+  private updateDraggedItemPosition(dragState: DragState, rect: Pick<DOMRect, 'left' | 'top'>) {
+    dragState.item.style.left = `${rect.left}px`
+    dragState.item.style.top = `${rect.top}px`
   }
 
   static styles = css`
