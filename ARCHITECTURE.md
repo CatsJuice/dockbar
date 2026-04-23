@@ -99,7 +99,7 @@ Its responsibilities are:
    On `<slot>` changes, it inspects assigned nodes and keeps only `DOCK-ITEM` children.
 
 2. Distribute shared configuration to children.
-   It pushes `size`, `easing`, `gap`, and `direction` down to each child by setting attributes on every `dock-item`.
+   It pushes `size`, `easing`, `gap`, and `direction` down to each child by setting attributes on every `dock-item`. Item-specific dimensions such as `width` remain owned by each `dock-item`.
 
 3. Listen for interaction events.
    It attaches `mousemove`, `mouseenter`, `mouseleave`, and `resize` listeners once the component becomes ready on the client.
@@ -137,7 +137,7 @@ Its responsibilities are:
    The internal DOM is a `<li>` with nested positioning and scaling wrappers around a `<slot>`.
 
 2. Accept layout and animation inputs.
-   It exposes `size`, `gap`, `direction`, `easing`, and `scale` as reactive Lit properties.
+   It exposes `size`, optional per-item `width`, `gap`, `direction`, `easing`, and `scale` as reactive Lit properties.
 
 3. Animate on `scale` changes.
    In `updated()`, when `scale` changes, it calls `onScaleChanged()` and runs two Anime.js animations:
@@ -159,6 +159,7 @@ That separation is what allows the dock to "inflate" while keeping content cente
 The public configuration surface is attribute/property driven:
 
 - `size`
+- per-item `width`
 - `padding`
 - `gap`
 - `max-scale`

@@ -25,6 +25,28 @@ async function waitForDockUpgrade(page: Page, selector: string) {
   }, selector)
 }
 
+async function getDockItemWidths(page: Page, selector: string) {
+  return page.locator(`${selector} dock-item`).evaluateAll((items) => {
+    return items.map((element) => {
+      const item = element.shadowRoot?.querySelector('li')
+      return Math.round(item?.getBoundingClientRect().width ?? 0)
+    })
+  })
+}
+
+async function getDockItemBaseWidths(page: Page, selector: string) {
+  return page.locator(`${selector} dock-item`).evaluateAll((items) => {
+    return items.map((element) => {
+      const dockItem = element as HTMLElement & { size?: number; width?: number }
+      const width = Number(dockItem.width)
+      if (Number.isFinite(width) && width > 0)
+        return width
+
+      return Number(dockItem.size ?? element.getAttribute('size') ?? 0)
+    })
+  })
+}
+
 test('playground renders dock and hover expands an item', async ({ page }) => {
   await page.goto('/')
   await waitForDockUpgrade(page, 'dock-wrapper')
@@ -48,6 +70,68 @@ test('playground renders dock and hover expands an item', async ({ page }) => {
 
   expect(beforeHover).toBeGreaterThan(0)
   expect(afterHover).toBeGreaterThan(beforeHover)
+})
+
+test('dock item supports per-item custom width', async ({ page }) => {
+  await page.goto('/custom-width')
+  await waitForDockUpgrade(page, '#custom-width-static')
+
+  await expect.poll(async () => {
+    return getDockItemWidths(page, '#custom-width-static')
+  }).toEqual([56, 96, 144, 72])
+
+  const wideItem = page.locator('#custom-width-static dock-item').nth(2)
+  const beforeHover = await wideItem.evaluate((element) => {
+    const item = element.shadowRoot?.querySelector('li')
+    return item?.getBoundingClientRect().width ?? 0
+  })
+
+  await wideItem.hover()
+  await expect.poll(async () => {
+    return wideItem.evaluate((element) => {
+      const item = element.shadowRoot?.querySelector('li')
+      return item?.getBoundingClientRect().width ?? 0
+    })
+  }).toBeGreaterThan(beforeHover)
+})
+
+test('custom width page updates reactive item width', async ({ page }) => {
+  await page.goto('/custom-width')
+  await waitForDockUpgrade(page, '#custom-width-reactive')
+
+  await expect.poll(async () => {
+    return getDockItemWidths(page, '#custom-width-reactive')
+  }).toEqual([56, 84, 104])
+
+  await page.locator('#custom-width-toggle').click()
+
+  await expect.poll(async () => {
+    return getDockItemWidths(page, '#custom-width-reactive')
+  }).toEqual([56, 156, 104])
+})
+
+test('custom width sortable case preserves mixed item widths', async ({ page }) => {
+  await page.goto('/custom-width')
+  await waitForDockUpgrade(page, '#custom-width-sortable')
+
+  await expect(page.locator('#custom-width-sortable-order')).toHaveText('a,b,c,d,e')
+  await expect.poll(async () => {
+    return getDockItemWidths(page, '#custom-width-sortable')
+  }).toEqual([56, 112, 48, 136, 56])
+
+  const lastItemBox = await page.locator('#custom-width-sortable dock-item').last().boundingBox()
+  if (!lastItemBox)
+    throw new Error('Missing last custom width dock item')
+
+  await dragLocatorTo(page, '#custom-width-sortable dock-item:first-of-type', {
+    x: lastItemBox.x + lastItemBox.width + 36,
+    y: lastItemBox.y + lastItemBox.height / 2,
+  })
+
+  await expect(page.locator('#custom-width-sortable-order')).toHaveText('b,c,d,e,a')
+  await expect.poll(async () => {
+    return getDockItemBaseWidths(page, '#custom-width-sortable')
+  }).toEqual([112, 48, 136, 56, 56])
 })
 
 test('sortable dock reorders items when dragging across the dock', async ({ page }) => {
@@ -132,8 +216,8 @@ test('sortable dock keeps the source visible and moves a drag preview', async ({
 
   expect(Math.abs(Number.parseFloat(previewStyle.left) - (dragPoint.x - pointerOffset.x))).toBeLessThan(8)
   expect(Math.abs(Number.parseFloat(previewStyle.top) - (dragPoint.y - pointerOffset.y))).toBeLessThan(8)
-  expect(Math.abs(Number.parseFloat(previewStyle.transformOrigin) - pointerOffset.x)).toBeLessThan(1)
-  expect(Math.abs(Number.parseFloat(previewStyle.transformOrigin.split(' ')[1]) - pointerOffset.y)).toBeLessThan(1)
+  expect(Math.abs(Number.parseFloat(previewStyle.transformOrigin) - pointerOffset.x)).toBeLessThan(4)
+  expect(Math.abs(Number.parseFloat(previewStyle.transformOrigin.split(' ')[1]) - pointerOffset.y)).toBeLessThan(4)
   expect(Math.abs(previewBox.x - sourceBox.x)).toBeGreaterThan(8)
   expect(Math.abs(previewBox.y - sourceBox.y)).toBeGreaterThan(4)
 

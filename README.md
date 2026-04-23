@@ -84,6 +84,16 @@ It is recommended to use a custom element inside `dock-item`, so that you can cu
 </dock-wrapper>
 ```
 
+Set `width` on an individual `dock-item` when that item should be wider than the shared `size`.
+
+```html
+<dock-wrapper size="40">
+  <dock-item>1</dock-item>
+  <dock-item width="96">Search</dock-item>
+  <dock-item>3</dock-item>
+</dock-wrapper>
+```
+
 You may need to look at docs if you are using a framework like Vue.js or React.
 - [Using Custom Elements in Vue](https://vuejs.org/guide/extras/web-components.html#using-custom-elements-in-vue)
 - [Custom HTML Elements in React](https://react.dev/reference/react-dom/components#custom-html-elements)
@@ -149,7 +159,8 @@ There are some problems yet to be solved:
 
 | Property | Type | Default | Description |
 | -------- | ---- | ------- | ----------- |
-| `size` | `number` | `40` | The base size of `dock-item` in `px`, see [Sizes](#sizes) |
+| `size` | `number` | `40` | The base height of `dock-item` and fallback width in `px`, see [Sizes](#sizes) |
+| `width` | `number` | `size` | Optional per-`dock-item` base width in `px` |
 | `padding` | `number` | `8` | The padding of `dock-wrapper` in `px`, see [Sizes](#sizes) |
 | `gap` | `number` | `8` | The gap between `dock-item`s in `px`, see [Sizes](#sizes) |
 | `maxScale` | `number` | `2` | The max scale of `dock-item`, see [Sizes](#sizes) |

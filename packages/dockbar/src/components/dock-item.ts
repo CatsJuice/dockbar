@@ -7,6 +7,9 @@ export class DockItem extends LitElement {
   @property({ type: Number })
   size = 40
 
+  @property({ type: Number })
+  width?: number
+
   @property({ type: String })
   easing = 'linear'
 
@@ -19,9 +22,15 @@ export class DockItem extends LitElement {
   @property({ type: String })
   direction = 'horizontal'
 
+  get widthValue() {
+    return typeof this.width === 'number' && Number.isFinite(this.width) && this.width > 0
+      ? this.width
+      : this.size
+  }
+
   get sizeStyle() {
     const styleObj = {
-      width: `${this.size}px`,
+      width: `${this.widthValue}px`,
       height: `${this.size}px`,
     }
     return Object.entries(styleObj).reduce((acc, [key, value]) => {
@@ -55,7 +64,7 @@ export class DockItem extends LitElement {
   }
 
   updated(changedProperties: any) {
-    if (changedProperties.has('scale'))
+    if (changedProperties.has('scale') || changedProperties.has('size') || changedProperties.has('width'))
       this.onScaleChanged(this.scale)
   }
 
@@ -76,8 +85,7 @@ export class DockItem extends LitElement {
   }
 
   get previewSizeStyle() {
-    const previewSize = this.size * this.scale
-    return `width: ${previewSize}px;height: ${previewSize}px;`
+    return `width: ${this.widthValue * this.scale}px;height: ${this.size * this.scale}px;`
   }
 
   onScaleChanged(scale: number) {
@@ -93,7 +101,7 @@ export class DockItem extends LitElement {
     }
 
     animate(sizeEl, {
-      width: `${this.size * scale}px`,
+      width: `${this.widthValue * scale}px`,
       height: `${this.size * scale}px`,
       duration: 100,
       ease: this.animationEase,
