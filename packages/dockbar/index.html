@@ -9,6 +9,7 @@
   <link rel="stylesheet" href="./src/index.css" />
   <script type="module" src="./src/components/dock-wrapper.ts"></script>
   <script type="module" src="./src/components/dock-item.ts"></script>
+  <script type="module" src="./src/components/dock-separator.ts"></script>
 
   <style>
     :root {
@@ -48,6 +49,7 @@
       border-radius: 10px;
       background-image: linear-gradient(45deg, var(--gradient-color-1), var(--gradient-color-2), var(--gradient-color-1), var(--gradient-color-2));
       background-size: 200% 100%;
+      cursor: grab;
     }
 
     .glass {
@@ -83,6 +85,14 @@
       visibility: visible;
     }
 
+    .dev-status {
+      color: var(--colors-gray12);
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 14px;
+      margin-top: 12px;
+      min-height: 20px;
+    }
+
   </style>
 </head>
 
@@ -94,17 +104,30 @@
   size: <input type="range" id="size" value="40" min="20" max="100" />
   gap: <input type="range" id="gap" value="8" min="0" max="100" />
 
+  <div class="dev-status">order: <span id="dock-order">1,2,3,4,5</span></div>
+  <div class="dev-status">event: <span id="dock-event">none</span></div>
 
-  <dock-wrapper class="glass" id="dock">
-    <dock-item style="background: #ccc">1</dock-item>
-    <dock-item>
+  <dock-wrapper class="glass" id="dock" sortable>
+    <dock-item data-value="1" style="background: #ccc">1</dock-item>
+    <dock-item data-value="2">
       <div class="my-item full flex-center">
         2
       </div>
     </dock-item>
-    <dock-item>
+    <dock-item data-value="3">
       <div class="my-item full flex-center">
         3
+      </div>
+    </dock-item>
+    <dock-separator thickness="2"></dock-separator>
+    <dock-item data-value="4">
+      <div class="my-item full flex-center">
+        4
+      </div>
+    </dock-item>
+    <dock-item data-value="5">
+      <div class="my-item full flex-center">
+        5
       </div>
     </dock-item>
   </dock-wrapper>
@@ -119,6 +142,8 @@
     const sizeInput = $id('size')
     const gapInput = $id('gap')
     const dock = $id('dock')
+    const dockOrder = $id('dock-order')
+    const dockEvent = $id('dock-event')
 
     paddingInput.oninput = function (e) {
       dock.setAttribute('padding', e.target.value)
@@ -132,6 +157,18 @@
     gapInput.oninput = function (e) {
       dock.setAttribute('gap', e.target.value)
     }
+
+    const getDockOrder = () => {
+      return Array.from(dock.querySelectorAll('dock-item'))
+        .map(item => item.dataset.value)
+        .join(',')
+    }
+
+    dock.addEventListener('on-sort', (event) => {
+      const { oldIndex, newIndex } = event.detail
+      dockOrder.textContent = getDockOrder()
+      dockEvent.textContent = `sort ${oldIndex} -> ${newIndex}`
+    })
     
     // const fragment = document.createDocumentFragment()
     // for (let i = 0; i < 15; i++) {

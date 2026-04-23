@@ -5,6 +5,7 @@ declare module 'react/jsx-runtime' {
     interface IntrinsicElements {
       'dock-wrapper': DetailedHTMLProps<HTMLAttributes<HTMLElement>, HTMLElement>
       'dock-item': DetailedHTMLProps<HTMLAttributes<HTMLElement>, HTMLElement>
+      'dock-separator': DetailedHTMLProps<HTMLAttributes<HTMLElement>, HTMLElement>
     }
   }
 }

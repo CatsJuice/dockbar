@@ -54,13 +54,8 @@ const buttons = computed(() => [
         :position="config.position"
         :sortable="config.sortable"
       >
-        <component
-          :is="btn.icon ? 'dock-item' : 'div'"
-          v-for="(btn, i) in buttons"
-          :key="i"
-          :style="!btn.icon ? 'align-self: center' : ''"
-        >
-          <div v-if="btn.icon">
+        <template v-for="(btn, i) in buttons" :key="i">
+          <dock-item v-if="btn.icon">
             <component
               :is="btn.href ? 'a' : 'div'"
               target="_blank"
@@ -70,10 +65,10 @@ const buttons = computed(() => [
             >
               <div h="1/2" :class="btn.icon" />
             </component>
-          </div>
+          </dock-item>
 
-          <div v-else :style="{ '--size': `${config.size / 2}px` }" pointer-events-none bg="white/40" class="separator" />
-        </component>
+          <dock-separator v-else />
+        </template>
       </dock-wrapper>
     </LightBorderFrame>
   </div>
@@ -124,14 +119,5 @@ const buttons = computed(() => [
   color: white;
   background: rgba(0,0,0,0.3);
   backdrop-filter: blur(12px) saturate(110%);
-}
-
-.dock.horizontal .separator {
-  width: 1px;
-  height: var(--size);
-}
-.dock.vertical .separator {
-  width: var(--size);
-  height: 1px;
 }
 </style>

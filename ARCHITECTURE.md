@@ -11,7 +11,7 @@ It is meant for contributors and agents who need repo-level context beyond the p
 This repository is a pnpm workspace with three main concerns:
 
 1. `packages/dockbar`
-   The publishable library. It exposes two custom elements, `dock-wrapper` and `dock-item`, implemented with Lit and animated with Anime.js.
+   The publishable library. It exposes three custom elements, `dock-wrapper`, `dock-item`, and `dock-separator`, implemented with Lit and animated with Anime.js.
 
 2. `packages/playground`
    The showcase and experimentation app. It is a Vue 3 + Vite SSG site used to demonstrate the dock in multiple visual styles and to expose live configuration controls.
@@ -79,6 +79,7 @@ The public entry is `packages/dockbar/src/index.ts`, which re-exports:
 
 - `./components/dock-wrapper`
 - `./components/dock-item`
+- `./components/dock-separator`
 
 Each component file uses `@customElement(...)`, so importing the package is enough to register the custom elements globally.
 
@@ -95,11 +96,11 @@ Each component file uses `@customElement(...)`, so importing the package is enou
 
 Its responsibilities are:
 
-1. Track child `dock-item` elements.
-   On `<slot>` changes, it inspects assigned nodes and keeps only `DOCK-ITEM` children.
+1. Track child `dock-item` and `dock-separator` elements.
+   On `<slot>` changes, it inspects assigned nodes, keeps `DOCK-ITEM` children for scaling/sorting, and keeps separators as block boundaries.
 
 2. Distribute shared configuration to children.
-   It pushes `size`, `easing`, `gap`, and `direction` down to each child by setting attributes on every `dock-item`. Item-specific dimensions such as `width` remain owned by each `dock-item`.
+   It pushes `size`, `easing`, `gap`, and `direction` down to each `dock-item`, and pushes `size` and `direction` down to each `dock-separator`. Item-specific dimensions such as `width` remain owned by each `dock-item`.
 
 3. Listen for interaction events.
    It attaches `mousemove`, `mouseenter`, `mouseleave`, and `resize` listeners once the component becomes ready on the client.
@@ -110,7 +111,10 @@ Its responsibilities are:
 5. Reset the dock when the pointer leaves.
    On `mouseleave`, it sets every child `scale` back to `1`.
 
-6. Render layout-level styles.
+6. Constrain sortable drag blocks.
+   When `sortable` is enabled, `dock-separator` elements split the item list into blocks. A dragged item can only be reordered inside its original block; moving past a separator is treated as an invalid drop and snaps back.
+
+7. Render layout-level styles.
    It applies CSS variables and inline styles for size, gap, padding, orientation, and overall wrapper thickness.
 
 Important implementation details:
@@ -154,6 +158,12 @@ The result is a two-layer animation model:
 
 That separation is what allows the dock to "inflate" while keeping content centered.
 
+### `dock-separator`: block boundary
+
+`dock-separator` is a non-scaling layout element. It renders a small separator line, receives `size` and `direction` from `dock-wrapper`, and exposes a local `thickness` property for its occupied width or height.
+
+Separators are not included in hover scale calculations or `on-sort` indexes. Their main runtime role is to split sortable docks into independent drag blocks.
+
 ### Configuration model
 
 The public configuration surface is attribute/property driven:
@@ -169,8 +179,11 @@ The public configuration surface is attribute/property driven:
 - `position`
 - `will-change`
 - `easing`
+- `sortable`
+- `allow-drag-delete`
+- separator `thickness`
 
-The wrapper owns most config and forwards a subset to items. Consumers usually configure only `dock-wrapper` and provide arbitrary slotted markup inside `dock-item`.
+The wrapper owns most config and forwards a subset to items and separators. Consumers usually configure only `dock-wrapper`, provide arbitrary slotted markup inside `dock-item`, and insert `dock-separator` wherever they want a block boundary.
 
 ### Styling model
 
@@ -187,8 +200,8 @@ This is why the examples and playground can make the same runtime look like diff
 The runtime interaction loop is:
 
 1. Consumer imports `dockbar` (or `dockbar/dist`).
-2. Browser registers `dock-wrapper` and `dock-item`.
-3. Consumer renders `dock-item` children inside a `dock-wrapper`.
+2. Browser registers `dock-wrapper`, `dock-item`, and `dock-separator`.
+3. Consumer renders `dock-item` children, and optionally `dock-separator` boundaries, inside a `dock-wrapper`.
 4. `dock-wrapper` sees the slot change, captures the children, and propagates shared props.
 5. Pointer movement over the wrapper triggers distance calculations.
 6. Wrapper updates each child's `scale` attribute.
@@ -305,7 +318,7 @@ Wraps VueUse dark-mode helpers:
 - `MacosDock.vue`
 - `RaunoDock.vue`
 
-All three styles reuse the same `dock-wrapper` / `dock-item` runtime and differ only in slot content and surrounding CSS.
+All three styles reuse the same `dock-wrapper` / `dock-item` / `dock-separator` runtime and differ only in slot content and surrounding CSS.
 
 ### Dock variants
 
@@ -432,5 +445,8 @@ For different kinds of context, use these files in this order:
 4. `packages/dockbar/src/components/dock-item.ts`
    Per-item animation and sizing behavior.
 
-5. `packages/playground/src/**/*`
+5. `packages/dockbar/src/components/dock-separator.ts`
+   Separator layout, orientation, and block-boundary behavior.
+
+6. `packages/playground/src/**/*`
    Demo composition, state flow, and styling examples built on top of the library.

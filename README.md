@@ -94,6 +94,17 @@ Set `width` on an individual `dock-item` when that item should be wider than the
 </dock-wrapper>
 ```
 
+Use `dock-separator` to split a dock into blocks. The separator occupies layout space and follows the wrapper direction, but it is not included in the hover scale effect.
+
+```html
+<dock-wrapper>
+  <dock-item>Finder</dock-item>
+  <dock-item>Safari</dock-item>
+  <dock-separator></dock-separator>
+  <dock-item>Trash</dock-item>
+</dock-wrapper>
+```
+
 You may need to look at docs if you are using a framework like Vue.js or React.
 - [Using Custom Elements in Vue](https://vuejs.org/guide/extras/web-components.html#using-custom-elements-in-vue)
 - [Custom HTML Elements in React](https://react.dev/reference/react-dom/components#custom-html-elements)
@@ -107,11 +118,13 @@ For more, see [Configuration](#configuration).
 ### Sortable dock
 
 Set `sortable` to enable drag reordering. Set `allow-drag-delete` if dropping an item outside the dock should emit a delete event instead of snapping back.
+When a sortable dock contains `dock-separator`, each separator creates a block. Items can only be dragged within their original block; dragging across a separator is treated as an invalid drop and snaps back.
 
 ```html
 <dock-wrapper id="dock" sortable allow-drag-delete>
   <dock-item data-id="launchpad">Launchpad</dock-item>
   <dock-item data-id="mail">Mail</dock-item>
+  <dock-separator></dock-separator>
   <dock-item data-id="music">Music</dock-item>
 </dock-wrapper>
 
@@ -172,6 +185,14 @@ There are some problems yet to be solved:
 | `sortable` | `boolean` | `false` | Enable drag reordering for dock items |
 | `allow-drag-delete` | `boolean` | `false` | When `sortable` is enabled, allow dropping an item outside the dock to emit a delete event |
 | `will-change` | `boolean` | `false` | Apply `will-change` hints to dock items for width and height |
+
+### `dock-separator`
+
+| Property | Type | Default | Description |
+| -------- | ---- | ------- | ----------- |
+| `thickness` | `number` | `1` | The separator thickness in `px` along the dock's main axis |
+
+`dock-wrapper` automatically provides `size` and `direction` to each `dock-separator`, so separators match the current dock orientation.
 
 ## Events
 
