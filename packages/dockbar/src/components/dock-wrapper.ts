@@ -49,6 +49,16 @@ interface DragState {
   }
 }
 
+interface DragBlockBounds {
+  max: number
+  min: number
+}
+
+interface DragPreviewPosition {
+  left: number
+  top: number
+}
+
 const DRAG_START_DISTANCE = 6
 const DRAG_SCALE = 1.08
 const REORDER_DURATION = 220
@@ -63,6 +73,13 @@ function asBoolean(value: boolean | string) {
 
 function asNumber(value: number | string) {
   return typeof value === 'number' ? value : Number(value)
+}
+
+function clamp(value: number, min: number, max: number) {
+  if (max < min)
+    return min
+
+  return Math.min(Math.max(value, min), max)
 }
 
 function isDockItemElement(node: Element): node is DockItem {
@@ -172,15 +189,16 @@ export class DockWrapper extends LitElement {
 
     e.preventDefault()
     this._suppressClick = true
-    this.updateDragPreviewPosition(dragState, e.clientX, e.clientY)
-
     const dockRect = this.getBoundingClientRect()
     const insideDock = this.isPointInsideRect(dockRect, e.clientX, e.clientY)
 
     if (!insideDock) {
+      this.updateDragPreviewPosition(dragState, e.clientX, e.clientY)
       this.handleDragOutside()
       return
     }
+
+    this.updateDragPreviewPosition(dragState, e.clientX, e.clientY, true)
 
     if (!this.isPointInsideDragBlock(dragState, e.clientX, e.clientY)) {
       this.handleDragOutsideBlock()
@@ -629,6 +647,61 @@ export class DockWrapper extends LitElement {
     }
   }
 
+  private getDragBlockBounds(dragState: DragState): DragBlockBounds {
+    const dockRect = this.getBoundingClientRect()
+    const previousRect = dragState.block.previousSeparator?.getBoundingClientRect()
+    const nextRect = dragState.block.nextSeparator?.getBoundingClientRect()
+
+    return this.direction === 'horizontal'
+      ? {
+          max: nextRect?.left ?? dockRect.right,
+          min: previousRect?.right ?? dockRect.left,
+        }
+      : {
+          max: nextRect?.top ?? dockRect.bottom,
+          min: previousRect?.bottom ?? dockRect.top,
+        }
+  }
+
+  private getDragPreviewPosition(dragState: DragState, clientX: number, clientY: number): DragPreviewPosition {
+    return {
+      left: clientX - dragState.pointerOffset.x,
+      top: clientY - dragState.pointerOffset.y,
+    }
+  }
+
+  private getConstrainedDragPreviewPosition(
+    dragState: DragState,
+    clientX: number,
+    clientY: number,
+  ): DragPreviewPosition {
+    const position = this.getDragPreviewPosition(dragState, clientX, clientY)
+    const { max, min } = this.getDragBlockBounds(dragState)
+    const scaleOffset = DRAG_SCALE - 1
+
+    if (this.direction === 'horizontal') {
+      const minLeft = min + dragState.pointerOffset.x * scaleOffset
+      const maxLeft = max
+        - dragState.originRect.width
+        - (dragState.originRect.width - dragState.pointerOffset.x) * scaleOffset
+
+      return {
+        ...position,
+        left: clamp(position.left, minLeft, maxLeft),
+      }
+    }
+
+    const minTop = min + dragState.pointerOffset.y * scaleOffset
+    const maxTop = max
+      - dragState.originRect.height
+      - (dragState.originRect.height - dragState.pointerOffset.y) * scaleOffset
+
+    return {
+      ...position,
+      top: clamp(position.top, minTop, maxTop),
+    }
+  }
+
   private getInsertionIndex(pointerX: number, pointerY: number) {
     const dragState = this._dragState
     const items = dragState ? this.getVisibleBlockItems(dragState) : this.getVisibleDockItems()
@@ -710,16 +783,8 @@ export class DockWrapper extends LitElement {
   }
 
   private isPointInsideDragBlock(dragState: DragState, clientX: number, clientY: number) {
-    const dockRect = this.getBoundingClientRect()
-    const previousRect = dragState.block.previousSeparator?.getBoundingClientRect()
-    const nextRect = dragState.block.nextSeparator?.getBoundingClientRect()
+    const { max, min } = this.getDragBlockBounds(dragState)
     const pointerValue = this.direction === 'horizontal' ? clientX : clientY
-    const min = this.direction === 'horizontal'
-      ? previousRect?.right ?? dockRect.left
-      : previousRect?.bottom ?? dockRect.top
-    const max = this.direction === 'horizontal'
-      ? nextRect?.left ?? dockRect.right
-      : nextRect?.top ?? dockRect.bottom
 
     return pointerValue >= min && pointerValue <= max
   }
@@ -862,12 +927,21 @@ export class DockWrapper extends LitElement {
     this._children = this._layoutChildren.filter(isDockItemElement)
   }
 
-  private updateDragPreviewPosition(dragState: DragState, clientX: number, clientY: number) {
+  private updateDragPreviewPosition(
+    dragState: DragState,
+    clientX: number,
+    clientY: number,
+    constrainToBlock = false,
+  ) {
     if (!dragState.preview)
       return
 
-    dragState.preview.style.left = `${clientX - dragState.pointerOffset.x}px`
-    dragState.preview.style.top = `${clientY - dragState.pointerOffset.y}px`
+    const position = constrainToBlock
+      ? this.getConstrainedDragPreviewPosition(dragState, clientX, clientY)
+      : this.getDragPreviewPosition(dragState, clientX, clientY)
+
+    dragState.preview.style.left = `${position.left}px`
+    dragState.preview.style.top = `${position.top}px`
   }
 
   private updateDraggedItemPosition(dragState: DragState, rect: Pick<DOMRect, 'left' | 'top'>) {

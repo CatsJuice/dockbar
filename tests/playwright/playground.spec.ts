@@ -47,6 +47,86 @@ async function getDockItemBaseWidths(page: Page, selector: string) {
   })
 }
 
+async function createSeparatorDock(page: Page) {
+  await page.evaluate(() => {
+    const existing = document.querySelector('#separator-dock-fixture')
+    existing?.remove()
+
+    const fixture = document.createElement('div')
+    fixture.id = 'separator-dock-fixture'
+    Object.assign(fixture.style, {
+      alignItems: 'center',
+      display: 'flex',
+      inset: '0',
+      justifyContent: 'center',
+      pointerEvents: 'none',
+      position: 'fixed',
+      zIndex: '100',
+    })
+
+    const dock = document.createElement('dock-wrapper')
+    dock.id = 'separator-dock'
+    dock.setAttribute('sortable', '')
+    dock.setAttribute('size', '56')
+    dock.setAttribute('padding', '10')
+    dock.setAttribute('gap', '10')
+    dock.setAttribute('max-scale', '1')
+    dock.setAttribute('max-range', '1')
+    Object.assign(dock.style, {
+      background: 'rgba(255, 255, 255, 0.14)',
+      border: '1px solid rgba(255, 255, 255, 0.24)',
+      borderRadius: '24px',
+      pointerEvents: 'auto',
+    })
+
+    const order = document.createElement('output')
+    order.id = 'separator-dock-order'
+    order.textContent = 'a,b,c,d,e'
+
+    const updateOrder = () => {
+      order.textContent = Array.from(dock.querySelectorAll('dock-item'))
+        .map(item => (item as HTMLElement).dataset.value)
+        .join(',')
+    }
+
+    dock.addEventListener('on-sort', updateOrder)
+
+    const appendItem = (value: string) => {
+      const item = document.createElement('dock-item')
+      item.dataset.value = value
+      const button = document.createElement('button')
+      button.type = 'button'
+      button.textContent = value
+      Object.assign(button.style, {
+        background: 'white',
+        border: '0',
+        borderRadius: '18px',
+        color: '#111827',
+        height: '100%',
+        width: '100%',
+      })
+      item.appendChild(button)
+      dock.appendChild(item)
+    }
+
+    appendItem('a')
+    appendItem('b')
+    appendItem('c')
+
+    const separator = document.createElement('dock-separator')
+    separator.setAttribute('thickness', '2')
+    dock.appendChild(separator)
+
+    appendItem('d')
+    appendItem('e')
+
+    fixture.append(order, dock)
+    document.body.appendChild(fixture)
+  })
+
+  await waitForDockUpgrade(page, '#separator-dock')
+}
+
 test('playground renders dock and hover expands an item', async ({ page }) => {
   await page.goto('/')
   await waitForDockUpgrade(page, 'dock-wrapper')
@@ -65,11 +145,9 @@ test('playground renders dock and hover expands an item', async ({ page }) => {
 
   const beforeHover = await getRenderedWidth()
   await firstDockItem.hover()
-  await page.waitForTimeout(250)
-  const afterHover = await getRenderedWidth()
 
   expect(beforeHover).toBeGreaterThan(0)
-  expect(afterHover).toBeGreaterThan(beforeHover)
+  await expect.poll(getRenderedWidth).toBeGreaterThan(beforeHover)
 })
 
 test('dock item supports per-item custom width', async ({ page }) => {
@@ -232,6 +310,48 @@ test('sortable dock keeps the source visible and moves a drag preview', async ({
   await page.mouse.up()
   await expect(preview).toHaveCount(0)
 })
+
+for (const [label, grabRatio] of [
+  ['center grab', 0.5],
+  ['right-edge grab', 0.86],
+] as const) {
+  test(`sortable dock clamps drag preview at separator boundaries with ${label}`, async ({ page }) => {
+    await page.goto('/sortable')
+    await waitForDockUpgrade(page, '#sortable-dock')
+    await createSeparatorDock(page)
+
+    const source = page.locator('#separator-dock dock-item[data-value="c"]')
+    const separator = page.locator('#separator-dock dock-separator')
+    const sourceBox = await source.boundingBox()
+    const separatorBox = await separator.boundingBox()
+    if (!sourceBox || !separatorBox)
+      throw new Error('Missing separator dock layout boxes')
+
+    const startX = sourceBox.x + sourceBox.width * grabRatio
+    const startY = sourceBox.y + sourceBox.height / 2
+    const targetX = separatorBox.x - 2
+
+    await page.mouse.move(startX, startY)
+    await page.mouse.down()
+    await page.mouse.move(startX + 12, startY, { steps: 4 })
+    await page.mouse.move(targetX, startY, { steps: 8 })
+
+    const preview = page.locator('[data-dock-preview]')
+    await expect(preview).toBeVisible()
+
+    const previewBox = await preview.boundingBox()
+    if (!previewBox)
+      throw new Error('Missing drag preview box')
+
+    expect(previewBox.x + previewBox.width).toBeLessThanOrEqual(separatorBox.x + 1)
+
+    await page.mouse.move(separatorBox.x + separatorBox.width + 40, startY, { steps: 8 })
+    await page.mouse.up()
+
+    await expect(preview).toHaveCount(0)
+    await expect(page.locator('#separator-dock-order')).toHaveText('a,b,c,d,e')
+  })
+}
 
 test('sortable dock deletes an item when dropped outside', async ({ page }) => {
   await page.goto('/sortable')
