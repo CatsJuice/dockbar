@@ -82,6 +82,38 @@ function clamp(value: number, min: number, max: number) {
   return Math.min(Math.max(value, min), max)
 }
 
+function calculateHoverScale(
+  pointerPosition: number,
+  itemCenter: number,
+  itemSize: number,
+  maxRange: number,
+  maxScale: number,
+) {
+  const centerDistance = Math.abs(pointerPosition - itemCenter)
+  if (
+    centerDistance >= maxRange
+    || itemSize <= 0
+    || maxRange <= 0
+    || maxScale <= 1
+  )
+    return 1
+
+  const d1 = itemCenter - itemSize / 2 - pointerPosition
+  const d2 = itemCenter + itemSize / 2 - pointerPosition
+  const angleFactor = Math.PI / (2 * maxRange)
+  const normalization = 2 * Math.sin(angleFactor * itemSize / 2)
+
+  if (Math.abs(normalization) < Number.EPSILON)
+    return 1
+
+  const maxSize = itemSize * maxScale
+  const averageSineSlope
+    = (Math.sin(angleFactor * d2) - Math.sin(angleFactor * d1)) / (d2 - d1)
+  const scale = 1 + (maxSize - itemSize) / normalization * averageSineSlope
+
+  return clamp(scale, 1, maxScale)
+}
+
 function isDockItemElement(node: Element): node is DockItem {
   return node.nodeName.toUpperCase() === 'DOCK-ITEM'
 }
@@ -365,26 +397,32 @@ export class DockWrapper extends LitElement {
   private applyHoverScale(clientX: number, clientY: number) {
     const { x, y } = this._mousePos
     const offset = this.direction === 'horizontal' ? clientX - x : clientY - y
-    this._mousePos = { x: clientX, y: clientY }
 
     if (Math.abs(offset) <= 2)
       return
+
+    this._mousePos = { x: clientX, y: clientY }
 
     const rect = this.getBoundingClientRect()
     if (!rect || this.disabledValue || this._overflowed)
       return
 
+    const pointerPosition = this.direction === 'horizontal' ? clientX : clientY
     this.getVisibleDockItems().forEach((child) => {
       const childRect = child.getBoundingClientRect()
       const center = this.direction === 'horizontal'
         ? childRect.left + childRect.width / 2
         : childRect.top + childRect.height / 2
-      const distance = Math.abs(
-        (this.direction === 'horizontal' ? clientX : clientY) - center,
+      const itemSize = this.direction === 'horizontal'
+        ? child.widthValue
+        : child.size
+      const scale = calculateHoverScale(
+        pointerPosition,
+        center,
+        itemSize,
+        this.maxRangeValue,
+        this.maxScaleValue,
       )
-      const scale = distance > this.maxRangeValue
-        ? 1
-        : 1 + (this.maxScaleValue - 1) * (1 - distance / this.maxRangeValue)
       child.setAttribute('scale', `${scale}`)
     })
   }

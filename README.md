@@ -177,7 +177,7 @@ There are some problems yet to be solved:
 | `padding` | `number` | `8` | The padding of `dock-wrapper` in `px`, see [Sizes](#sizes) |
 | `gap` | `number` | `8` | The gap between `dock-item`s in `px`, see [Sizes](#sizes) |
 | `maxScale` | `number` | `2` | The max scale of `dock-item`, see [Sizes](#sizes) |
-| `maxRange` | `number` | `200` | The max hover range in `px` that participates in the scale effect |
+| `maxRange` | `number` | `200` | The hover radius in `px` for the cosine-shaped scale effect |
 | `disabled` | `boolean` | `false` | Disable the hover scale effect |
 | `direction` | `horizontal` \| `vertical` | `horizontal` | The layout direction of `dock-item`s |
 | `position` | `top` \| `bottom` \| `left` \| `right` | `bottom` | The dock position, which affects the scale origin |
