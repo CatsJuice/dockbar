@@ -1,6 +1,4 @@
 <script lang="ts" setup>
-import { swingUp } from '../../anims/swing-up'
-
 const bgStyle = {
   backgroundImage: 'url("/lofi/lofi-bg@0.5x.webp")',
   borderRadius: 'inherit',
@@ -9,12 +7,7 @@ const lofiCD = {
   backgroundImage: 'url("/lofi/lofi-cd@0.5x.webp")',
 }
 
-const $swing1 = ref<HTMLElement>()
 const hovered = ref(false)
-
-swingUp({
-  target: $swing1,
-})
 </script>
 
 <template>

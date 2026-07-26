@@ -103,16 +103,16 @@ Its responsibilities are:
    It pushes `size`, `easing`, `gap`, and `direction` down to each `dock-item`, and pushes `size` and `direction` down to each `dock-separator`. Item-specific dimensions such as `width` remain owned by each `dock-item`.
 
 3. Listen for interaction events.
-   It attaches `mousemove`, `mouseenter`, `mouseleave`, and `resize` listeners once the component becomes ready on the client.
+   It attaches hover and sortable-pointer listeners once the component becomes ready on the client. High-frequency `mousemove` and drag `pointermove` events are coalesced to one update per animation frame, with the latest pointer position winning.
 
 4. Compute scale from pointer distance.
-   For each child, it measures the child bounding box and finds its center along the active axis. It then evaluates the average slope of a sine curve across the item's unscaled bounds, producing a cosine-shaped magnification wave between `1` and `maxScale` inside `maxRange`. Using both item edges instead of only the center keeps the response consistent for custom-width items.
+   In the scheduled frame, it measures all visible item bounding boxes before writing any new scales. It then finds each center along the active axis and evaluates the average slope of a sine curve across the item's unscaled bounds, producing a cosine-shaped magnification wave between `1` and `maxScale` inside `maxRange`. Using both item edges instead of only the center keeps the response consistent for custom-width items.
 
 5. Reset the dock when the pointer leaves.
    On `mouseleave`, it sets every child `scale` back to `1`.
 
 6. Constrain sortable drag blocks.
-   When `sortable` is enabled, `dock-separator` elements split the item list into blocks. A dragged item can only be reordered inside its original block; moving past a separator is treated as an invalid drop and snaps back.
+   When `sortable` is enabled, `dock-separator` elements split the item list into blocks. A dragged item can only be reordered inside its original block; moving past a separator is treated as an invalid drop and snaps back. Measurements are shared between insertion, hover, and FLIP calculations where possible, and the placeholder is only moved when the insertion index changes.
 
 7. Render layout-level styles.
    It applies CSS variables and inline styles for size, gap, padding, orientation, and overall wrapper thickness.
@@ -125,11 +125,17 @@ Important implementation details:
 - Position affects layout alignment.
   `position` is used by CSS to choose whether items align toward the top, bottom, left, or right edge of the wrapper.
 
+- Reads precede writes in continuous interaction paths.
+  Hover and drag frames batch geometry reads before scale, placeholder, preview, or animation writes. Pending frames are canceled on leave, disconnect, direction changes, pointer cancellation, or when the component becomes disabled.
+
+- Drag previews use compositor-friendly movement.
+  The fixed preview is positioned with `translateX` / `translateY` instead of continuously changing `left` / `top`. Reorder FLIP measurements are also split into read and write phases.
+
 - Server-side execution is partially guarded.
   The component detects a server environment and skips observer/event setup there, but the library is still not treated as fully SSR-safe.
 
 - Overflow support is unfinished.
-  `onResize()` contains commented-out overflow detection logic and the `_overflowed` path is not currently functional.
+  The CSS contains overflow states, but runtime overflow detection is not implemented.
 
 ### `dock-item`: animated visual container
 
@@ -141,12 +147,12 @@ Its responsibilities are:
    The internal DOM is a `<li>` with nested positioning and scaling wrappers around a `<slot>`.
 
 2. Accept layout and animation inputs.
-   It exposes `size`, optional per-item `width`, `gap`, `direction`, `easing`, and `scale` as reactive Lit properties.
+   It exposes `size`, optional per-item `width`, `gap`, `direction`, `easing`, and `scale` as Lit-backed attributes/properties. `scale` uses a custom non-rendering accessor because the shadow DOM structure does not need to be re-rendered for every pointer frame.
 
 3. Animate on `scale` changes.
-   In `updated()`, when `scale` changes, it calls `onScaleChanged()` and runs two Anime.js animations:
-   - one on the outer `.dock-item` element to change width and height
-   - one on the inner `.dock-item__scale` element to apply transform-based scaling
+   The scale accessor calls `onScaleChanged()` directly after the first render. Each item keeps one reusable Anime.js numeric scale channel instead of constructing new animations for every pointer update. Its render callback derives all three DOM writes from that value:
+   - width and height on the outer `.dock-item` element
+   - transform scale on the inner `.dock-item__scale` element
 
 4. Preserve hover continuity between items.
    `::before` and `::after` pseudo-elements extend the effective interaction area across the configured gap, reducing the chance that the hover effect breaks when the pointer moves between neighboring items.
@@ -203,9 +209,9 @@ The runtime interaction loop is:
 2. Browser registers `dock-wrapper`, `dock-item`, and `dock-separator`.
 3. Consumer renders `dock-item` children, and optionally `dock-separator` boundaries, inside a `dock-wrapper`.
 4. `dock-wrapper` sees the slot change, captures the children, and propagates shared props.
-5. Pointer movement over the wrapper triggers distance calculations.
-6. Wrapper updates each child's `scale` attribute.
-7. Each `dock-item` receives the new value, runs Anime.js transitions, and repaints.
+5. Pointer movement queues a single animation-frame update; later events in the same frame replace the pending coordinates.
+6. The frame measures visible items, calculates the scale profile, and assigns only changed `scale` properties. Attribute parsing is bypassed for this internal wrapper-to-item update.
+7. Each changed `dock-item` retargets its reusable Anime.js scale channel without requesting a Lit render.
 
 The slot content itself is never interpreted by the library. The library only scales the container and lets the slotted child fill the item box via `::slotted(*) { width: 100%; height: 100%; }`.
 
@@ -397,18 +403,19 @@ Demonstrates the current SSR limitation. The page wraps the dock in `<ClientOnly
 
 ## Testing and Quality Status
 
-The repository has test tooling wired into the playground package, but the current test coverage is weak and not aligned with the actual dock implementation.
+The repository combines unit scaffolding with browser-level behavior and performance coverage.
 
-Observed status:
+Current coverage:
 
 - `packages/playground/test/basic.test.ts` is only a placeholder sanity test.
 - `packages/playground/test/component.test.ts` still references `../src/components/TheCounter.vue`, which does not belong to the current dock project and appears to be leftover starter-template code.
-- Cypress is configured, but the test suite is demo-oriented rather than library-behavior oriented.
+- `tests/playwright/playground.spec.ts` exercises hover scaling, custom widths, sorting, drag previews, separator boundaries, and queued-hover cancellation against the built playground.
+- `scripts/benchmark-pointer.mjs` runs repeatable baseline/candidate hover and drag workloads in Chromium. It reports DOM operation counts, CDP layout/style/script timings, frame cadence, long tasks, long animation frames, and scale-profile correctness. Run it through `pnpm benchmark:pointer` with absolute `DOCKBAR_BASELINE_BUNDLE` and `DOCKBAR_CANDIDATE_BUNDLE` paths.
 
 Practical conclusion:
 
-- The project currently relies more on manual demo validation than on automated regression coverage.
-- Anyone extending the core library should add targeted tests around scaling logic, custom element registration, and framework integration behavior.
+- Core pointer behavior has browser regression coverage, while the older playground unit/Cypress scaffolding is still incomplete.
+- Performance changes should be checked with the benchmark runner and browser tests, not inferred from source changes alone.
 
 ## Known Constraints and Implementation Gaps
 
@@ -421,13 +428,13 @@ The codebase itself documents or implies several constraints:
    The public README already recommends hiding the custom element until `:defined`.
 
 3. Overflow handling is incomplete.
-   `DockWrapper.onResize()` contains commented-out work for detecting overflow and enabling scroll behavior.
+   Overflow CSS states exist, but there is no runtime overflow detector to activate them.
 
 4. Playground docs contain template leftovers.
    `packages/playground/README.md` and `README.zh-CN.md` are mostly inherited Vitesse template docs and should not be treated as authoritative architecture documentation for this repository.
 
-5. Test coverage is not authoritative yet.
-   The existing test files should be treated as scaffolding, not as proof of runtime correctness.
+5. Framework integration coverage is still incomplete.
+   Core interactions have Playwright coverage, but the example applications and SSR integrations still rely mostly on build checks and manual validation.
 
 ## Where To Read Next
 

@@ -10,44 +10,44 @@ const props = withDefaults(defineProps<Props>(), {
   borderWidth: 1.4,
 })
 
-const $el = ref<HTMLElement>()
-const { width, height } = useElementBounding($el)
-
 const style = computed(() => ({
-  borderRadius: getSize(props.radius!),
+  '--light-border-radius': getSize(props.radius),
+  '--light-border-width': `${props.borderWidth}px`,
 }))
 </script>
 
 <template>
-  <div ref="$el" relative :style="style" class="light-border-frame">
-    <svg
-      :width="width" :height="height"
-      :view-box="`0 0 ${width} ${height}`"
-      xmlns="http://www.w3.org/2000/svg"
-      pointer-events-none absolute top-0 left-0
-    >
-      <rect
-        :x="borderWidth / 2"
-        :y="borderWidth / 2"
-        :width="Math.max(0, width - borderWidth)"
-        :height="Math.max(0, height - borderWidth)"
-        :rx="radius" :ry="radius"
-        fill="none" :stroke-width="borderWidth"
-        stroke="url(#gradient-border)"
-      />
-
-      <defs>
-        <linearGradient id="gradient-border" x1="15.2088" y1="1.99996" x2="91.4388" y2="177.493" gradientUnits="userSpaceOnUse">
-          <stop stop-color="white" stop-opacity="0.4" />
-          <stop offset="0.405687" stop-color="white" stop-opacity="0.01" />
-          <stop offset="0.574372" stop-color="white" stop-opacity="0.01" />
-          <stop offset="1" stop-color="white" stop-opacity="0.1" />
-        </linearGradient>
-      </defs>
-    </svg>
+  <div relative :style="style" class="light-border-frame">
     <slot />
   </div>
 </template>
 
 <style scoped>
+.light-border-frame {
+  border-radius: var(--light-border-radius);
+}
+
+.light-border-frame::before {
+  position: absolute;
+  border-radius: inherit;
+  padding: var(--light-border-width);
+  background: linear-gradient(
+    156deg,
+    rgba(255, 255, 255, 0.4) 0%,
+    rgba(255, 255, 255, 0.01) 40.5687%,
+    rgba(255, 255, 255, 0.01) 57.4372%,
+    rgba(255, 255, 255, 0.1) 100%
+  );
+  content: "";
+  inset: 0;
+  pointer-events: none;
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+}
 </style>

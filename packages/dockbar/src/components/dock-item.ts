@@ -1,9 +1,16 @@
 import { LitElement, css, html } from 'lit'
 import { customElement, property } from 'lit/decorators.js'
-import { animate } from 'animejs'
+import { createAnimatable } from 'animejs'
+import type { AnimatableObject, AnimatableParams } from 'animejs'
 
 @customElement('dock-item')
 export class DockItem extends LitElement {
+  private readonly _animatedScale = { value: 1 }
+  private _scale = 1
+  private _scaleAnimation: AnimatableObject | null = null
+  private _scaleElement: HTMLElement | null = null
+  private _sizeElement: HTMLElement | null = null
+
   @property({ type: Number })
   size = 40
 
@@ -13,8 +20,20 @@ export class DockItem extends LitElement {
   @property({ type: String })
   easing = 'linear'
 
-  @property({ type: Number })
-  scale = 1
+  @property({ type: Number, noAccessor: true })
+  get scale() {
+    return this._scale
+  }
+
+  set scale(value: number) {
+    const nextScale = Number(value)
+    if (!Number.isFinite(nextScale) || Object.is(nextScale, this._scale))
+      return
+
+    this._scale = nextScale
+    if (this.hasUpdated)
+      this.onScaleChanged(nextScale)
+  }
 
   @property({ type: Number })
   gap = 8
@@ -63,8 +82,13 @@ export class DockItem extends LitElement {
     `
   }
 
-  updated(changedProperties: any) {
-    if (changedProperties.has('scale') || changedProperties.has('size') || changedProperties.has('width'))
+  firstUpdated() {
+    this._sizeElement = this.shadowRoot?.querySelector<HTMLElement>('.dock-item') ?? null
+    this._scaleElement = this.shadowRoot?.querySelector<HTMLElement>('.dock-item__scale') ?? null
+  }
+
+  updated(changedProperties: Map<string, unknown>) {
+    if (changedProperties.has('size') || changedProperties.has('width'))
       this.onScaleChanged(this.scale)
   }
 
@@ -89,8 +113,8 @@ export class DockItem extends LitElement {
   }
 
   onScaleChanged(scale: number) {
-    const sizeEl = this.shadowRoot?.querySelector('.dock-item')
-    const scaleEl = this.shadowRoot?.querySelector('.dock-item__scale')
+    const sizeEl = this._sizeElement
+    const scaleEl = this._scaleElement
     if (!sizeEl || !scaleEl)
       return
 
@@ -100,17 +124,20 @@ export class DockItem extends LitElement {
       return
     }
 
-    animate(sizeEl, {
-      width: `${this.widthValue * scale}px`,
-      height: `${this.size * scale}px`,
-      duration: 100,
-      ease: this.animationEase,
-    })
-    animate(scaleEl, {
-      scale,
-      duration: 100,
-      ease: this.animationEase,
-    })
+    if (!this._scaleAnimation) {
+      const animationParameters = {
+        value: { duration: 100 },
+        onRender: () => {
+          const animatedScale = this._animatedScale.value
+          sizeEl.style.width = `${this.widthValue * animatedScale}px`
+          sizeEl.style.height = `${this.size * animatedScale}px`
+          scaleEl.style.transform = `scale(${animatedScale})`
+        },
+      } as unknown as AnimatableParams
+      this._scaleAnimation = createAnimatable(this._animatedScale, animationParameters)
+    }
+
+    this._scaleAnimation.value(scale, 100, this.animationEase)
   }
 
   static styles = css`
@@ -123,6 +150,7 @@ export class DockItem extends LitElement {
       margin: 0;
       padding: 0;
       position: relative;
+      will-change: var(--dock-item-will-change, auto);
     }
     li.dock-item .dock-item__pos {
       position: absolute;

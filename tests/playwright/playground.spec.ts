@@ -25,6 +25,10 @@ async function waitForDockUpgrade(page: Page, selector: string) {
   }, selector)
 }
 
+async function waitForAnimationFrame(page: Page) {
+  await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => resolve(undefined))))
+}
+
 async function getDockItemWidths(page: Page, selector: string) {
   return page.locator(`${selector} dock-item`).evaluateAll((items) => {
     return items.map((element) => {
@@ -155,7 +159,7 @@ test('dock hover responds to accumulated one-pixel pointer movements', async ({ 
   await waitForDockUpgrade(page, 'dock-wrapper')
 
   const firstDockItem = page.locator('dock-item').first()
-  const scales = await firstDockItem.evaluate((element) => {
+  const scales = await firstDockItem.evaluate(async (element) => {
     const dock = element.closest('dock-wrapper')
     const rect = element.getBoundingClientRect()
     const centerX = rect.left + rect.width / 2
@@ -170,15 +174,46 @@ test('dock hover responds to accumulated one-pixel pointer movements', async ({ 
 
     move(centerX - 20)
     move(startX)
-    const before = element.getAttribute('scale')
+    await new Promise(resolve => requestAnimationFrame(() => resolve(undefined)))
+    const before = (element as HTMLElement & { scale: number }).scale
     for (let offset = 1; offset <= 4; offset++)
       move(startX + offset)
+    await new Promise(resolve => requestAnimationFrame(() => resolve(undefined)))
 
-    return { after: element.getAttribute('scale'), before }
+    return {
+      after: (element as HTMLElement & { scale: number }).scale,
+      before,
+    }
   })
 
-  expect(scales.before).not.toBeNull()
   expect(scales.after).not.toBe(scales.before)
+})
+
+test('dock hover cancels queued work when the pointer leaves', async ({ page }) => {
+  await page.goto('/')
+  await waitForDockUpgrade(page, 'dock-wrapper')
+
+  const scales = await page.locator('dock-wrapper').evaluate(async (dock) => {
+    const item = dock.querySelector('dock-item')
+    if (!item)
+      return []
+
+    const rect = item.getBoundingClientRect()
+    dock.dispatchEvent(new MouseEvent('mousemove', {
+      bubbles: true,
+      clientX: rect.left + rect.width / 2,
+      clientY: rect.top + rect.height / 2,
+      composed: true,
+    }))
+    dock.dispatchEvent(new MouseEvent('mouseleave'))
+
+    await new Promise(resolve => requestAnimationFrame(() => resolve(undefined)))
+    return Array.from(dock.querySelectorAll('dock-item'))
+      .map(element => (element as HTMLElement & { scale: number }).scale)
+  })
+
+  expect(scales.length).toBeGreaterThan(0)
+  expect(scales.every(scale => scale === 1)).toBe(true)
 })
 
 test('dock item supports per-item custom width', async ({ page }) => {
@@ -277,7 +312,7 @@ test('sortable dock keeps the source visible and moves a drag preview', async ({
   const startX = box.x + requestedOffset.x
   const startY = box.y + requestedOffset.y
   const dragPoint = {
-    x: startX + 24,
+    x: startX + 40,
     y: startY - 8,
   }
   const movedPoint = {
@@ -302,6 +337,7 @@ test('sortable dock keeps the source visible and moves a drag preview', async ({
 
   await page.mouse.down()
   await page.mouse.move(dragPoint.x, dragPoint.y, { steps: 6 })
+  await waitForAnimationFrame(page)
 
   const preview = page.locator('[data-dock-preview]')
   await expect(preview).toBeVisible()
@@ -311,9 +347,10 @@ test('sortable dock keeps the source visible and moves a drag preview', async ({
     if (!(element instanceof HTMLElement))
       return null
 
+    const transform = new DOMMatrixReadOnly(element.style.transform)
     return {
-      left: element.style.left,
-      top: element.style.top,
+      translateX: transform.m41,
+      translateY: transform.m42,
       transformOrigin: element.style.transformOrigin,
     }
   })
@@ -323,14 +360,15 @@ test('sortable dock keeps the source visible and moves a drag preview', async ({
   if (!sourceBox || !previewBox || !previewStyle)
     throw new Error('Missing drag source or preview box')
 
-  expect(Math.abs(Number.parseFloat(previewStyle.left) - (dragPoint.x - pointerOffset.x))).toBeLessThan(8)
-  expect(Math.abs(Number.parseFloat(previewStyle.top) - (dragPoint.y - pointerOffset.y))).toBeLessThan(8)
+  expect(Math.abs(previewStyle.translateX - (dragPoint.x - pointerOffset.x))).toBeLessThan(8)
+  expect(Math.abs(previewStyle.translateY - (dragPoint.y - pointerOffset.y))).toBeLessThan(8)
   expect(Math.abs(Number.parseFloat(previewStyle.transformOrigin) - pointerOffset.x)).toBeLessThan(4)
   expect(Math.abs(Number.parseFloat(previewStyle.transformOrigin.split(' ')[1]) - pointerOffset.y)).toBeLessThan(4)
   expect(Math.abs(previewBox.x - sourceBox.x)).toBeGreaterThan(8)
   expect(Math.abs(previewBox.y - sourceBox.y)).toBeGreaterThan(4)
 
   await page.mouse.move(movedPoint.x, movedPoint.y, { steps: 8 })
+  await waitForAnimationFrame(page)
 
   const movedPreviewBox = await preview.boundingBox()
   if (!movedPreviewBox)
@@ -366,6 +404,7 @@ for (const [label, grabRatio] of [
     await page.mouse.down()
     await page.mouse.move(startX + 12, startY, { steps: 4 })
     await page.mouse.move(targetX, startY, { steps: 8 })
+    await waitForAnimationFrame(page)
 
     const preview = page.locator('[data-dock-preview]')
     await expect(preview).toBeVisible()
