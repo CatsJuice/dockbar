@@ -106,7 +106,7 @@ Its responsibilities are:
    It attaches `mousemove`, `mouseenter`, `mouseleave`, and `resize` listeners once the component becomes ready on the client.
 
 4. Compute scale from pointer distance.
-   For each child, it measures the child bounding box, finds the center along the active axis, computes the distance from the current pointer position, and converts that distance into a scale between `1` and `maxScale` inside `maxRange`.
+   For each child, it measures the child bounding box and finds its center along the active axis. It then evaluates the average slope of a sine curve across the item's unscaled bounds, producing a cosine-shaped magnification wave between `1` and `maxScale` inside `maxRange`. Using both item edges instead of only the center keeps the response consistent for custom-width items.
 
 5. Reset the dock when the pointer leaves.
    On `mouseleave`, it sets every child `scale` back to `1`.

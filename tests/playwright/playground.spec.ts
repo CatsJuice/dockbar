@@ -150,6 +150,37 @@ test('playground renders dock and hover expands an item', async ({ page }) => {
   await expect.poll(getRenderedWidth).toBeGreaterThan(beforeHover)
 })
 
+test('dock hover responds to accumulated one-pixel pointer movements', async ({ page }) => {
+  await page.goto('/')
+  await waitForDockUpgrade(page, 'dock-wrapper')
+
+  const firstDockItem = page.locator('dock-item').first()
+  const scales = await firstDockItem.evaluate((element) => {
+    const dock = element.closest('dock-wrapper')
+    const rect = element.getBoundingClientRect()
+    const centerX = rect.left + rect.width / 2
+    const startX = centerX + 20
+    const startY = rect.top + rect.height / 2
+    const move = (clientX: number) => dock?.dispatchEvent(new MouseEvent('mousemove', {
+      bubbles: true,
+      clientX,
+      clientY: startY,
+      composed: true,
+    }))
+
+    move(centerX - 20)
+    move(startX)
+    const before = element.getAttribute('scale')
+    for (let offset = 1; offset <= 4; offset++)
+      move(startX + offset)
+
+    return { after: element.getAttribute('scale'), before }
+  })
+
+  expect(scales.before).not.toBeNull()
+  expect(scales.after).not.toBe(scales.before)
+})
+
 test('dock item supports per-item custom width', async ({ page }) => {
   await page.goto('/custom-width')
   await waitForDockUpgrade(page, '#custom-width-static')
