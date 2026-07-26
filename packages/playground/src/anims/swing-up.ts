@@ -31,32 +31,41 @@ export function swingUp(_options: SwingUpOptions) {
   const target = _options.target
 
   if (!isClient || !target)
-    return
+    return () => {}
 
   let startTime = Date.now()
   let ready = false
+  let stopped = false
+  let animationFrame: number | undefined
+  let stopWatching: (() => void) | undefined
 
-  if (isRef(options.target)) {
-    const unwatch = watch(options.target, (el) => {
-      if (el) {
-        startTime = Date.now()
-        window.requestAnimationFrame(frame)
-        unwatch()
-      }
-    }, { immediate: true })
+  function cancel() {
+    if (stopped)
+      return
+
+    stopped = true
+    stopWatching?.()
+    stopWatching = undefined
+
+    if (animationFrame !== undefined) {
+      window.cancelAnimationFrame(animationFrame)
+      animationFrame = undefined
+    }
   }
-  else {
-    window.requestAnimationFrame(frame)
+
+  function queueFrame() {
+    if (!stopped && animationFrame === undefined)
+      animationFrame = window.requestAnimationFrame(frame)
   }
 
   function getEl() {
     return isRef(options.target) ? options.target.value : options.target
   }
-  function init() {
+  function init(el: HTMLElement) {
     if (ready)
       return
     ready = true
-    getEl()?.style?.setProperty(
+    el.style.setProperty(
       'transform',
       [
         'translateX(var(--translate-x))',
@@ -68,6 +77,11 @@ export function swingUp(_options: SwingUpOptions) {
   }
 
   function frame() {
+    animationFrame = undefined
+
+    if (stopped)
+      return
+
     const {
       distance = defaultOptions.distance!,
       speed = defaultOptions.speed!,
@@ -81,10 +95,15 @@ export function swingUp(_options: SwingUpOptions) {
     } = options
     const now = Date.now()
     const elapsed = now - startTime
-    const el = getEl()!
+    const el = getEl()
+    if (!el) {
+      cancel()
+      return
+    }
+
     const elapsedSeconds = elapsed / 1000
     const totalTimeSeconds = distance / speed
-    init()
+    init(el)
 
     const process = elapsedSeconds / totalTimeSeconds
 
@@ -108,12 +127,37 @@ export function swingUp(_options: SwingUpOptions) {
       el.style.setProperty('--scale', '0')
       el.style.setProperty('opacity', '0')
       if (once) {
+        stopped = true
         options.onEnd?.()
         return
       }
       startTime = Date.now()
     }
 
-    window.requestAnimationFrame(frame)
+    queueFrame()
   }
+
+  if (isRef(options.target)) {
+    let started = false
+    stopWatching = watch(options.target, (el) => {
+      if (!el || started || stopped)
+        return
+
+      started = true
+      startTime = Date.now()
+      queueFrame()
+      stopWatching?.()
+      stopWatching = undefined
+    }, { immediate: true })
+
+    if (started) {
+      stopWatching()
+      stopWatching = undefined
+    }
+  }
+  else {
+    queueFrame()
+  }
+
+  return cancel
 }

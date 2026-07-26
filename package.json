@@ -30,6 +30,7 @@
     "dev:playground": "pnpm --filter playground dev",
     "build:dockbar": "cd packages/dockbar && pnpm build",
     "build:playground": "pnpm --filter playground build",
+    "benchmark:pointer": "node ./scripts/benchmark-pointer.mjs",
     "test:playwright": "playwright test",
     "build": "node ./.build.mjs",
     "publish": "node ./.build.mjs --publish"

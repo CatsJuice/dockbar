@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { isClient } from '@vueuse/shared'
-
 useHead({
   title: 'Dockbar - Playground',
   meta: [
@@ -18,33 +16,57 @@ useHead({
     },
   ],
 })
-const { x, y } = useMouse()
-const parallaxDistance = 10
 
-const bgPosition = computed(() => {
-  if (!isClient)
-    return {}
-  const screenCenter = [
-    window.innerWidth / 2,
-    window.innerHeight / 2,
-  ]
-  const mousePosition = [x.value, y.value]
-  const diff = [
-    mousePosition[0] - screenCenter[0],
-    mousePosition[1] - screenCenter[1],
-  ]
-  const ratio = [
-    diff[0] / screenCenter[0],
-    diff[1] / screenCenter[1],
-  ]
-  const position = [
-    ratio[0] * parallaxDistance,
-    ratio[1] * parallaxDistance,
-  ]
-  return {
-    backgroundPosition: `calc(50% - ${position[0]}px) calc(50% - ${position[1]}px)`,
-    inset: `-${parallaxDistance}px`,
-  }
+const $background = ref<HTMLElement>()
+const parallaxDistance = 10
+let pointerX = 0
+let pointerY = 0
+let parallaxFrame: number | undefined
+let parallaxReady = false
+
+function updateParallax() {
+  parallaxFrame = undefined
+
+  const background = $background.value
+  if (!background)
+    return
+
+  const centerX = window.innerWidth / 2
+  const centerY = window.innerHeight / 2
+  const offsetX = centerX ? (pointerX - centerX) / centerX * parallaxDistance : 0
+  const offsetY = centerY ? (pointerY - centerY) / centerY * parallaxDistance : 0
+
+  background.style.transform = `translate3d(${-offsetX}px, ${-offsetY}px, 0)`
+}
+
+function queueParallaxUpdate() {
+  if (parallaxReady && parallaxFrame === undefined)
+    parallaxFrame = window.requestAnimationFrame(updateParallax)
+}
+
+function onMousemove(event: MouseEvent) {
+  pointerX = event.clientX
+  pointerY = event.clientY
+  queueParallaxUpdate()
+}
+
+onMounted(() => {
+  pointerX = window.innerWidth / 2
+  pointerY = window.innerHeight / 2
+  parallaxReady = true
+  window.addEventListener('mousemove', onMousemove, { passive: true })
+  window.addEventListener('resize', queueParallaxUpdate, { passive: true })
+})
+
+watch(isDark, queueParallaxUpdate, { flush: 'post' })
+
+onBeforeUnmount(() => {
+  parallaxReady = false
+  window.removeEventListener('mousemove', onMousemove)
+  window.removeEventListener('resize', queueParallaxUpdate)
+
+  if (parallaxFrame !== undefined)
+    window.cancelAnimationFrame(parallaxFrame)
 })
 </script>
 
@@ -53,14 +75,18 @@ const bgPosition = computed(() => {
     <transition name="fade">
       <div
         v-if="!isDark"
+        ref="$background"
+        class="parallax-background"
         fixed bg-cover bg-center bg-no-repeat
-        :style="{ backgroundImage: `url('/room-day.webp')`, ...bgPosition }"
+        :style="{ backgroundImage: `url('/room-day.webp')`, inset: `-${parallaxDistance}px` }"
       />
 
       <div
         v-else
+        ref="$background"
+        class="parallax-background"
         fixed bg-cover bg-center bg-no-repeat
-        :style="{ backgroundImage: `url('/room-night.webp')`, ...bgPosition }"
+        :style="{ backgroundImage: `url('/room-night.webp')`, inset: `-${parallaxDistance}px` }"
       />
     </transition>
     <div full relative z-1>
@@ -70,6 +96,11 @@ const bgPosition = computed(() => {
 </template>
 
 <style>
+.parallax-background {
+  transform: translate3d(0, 0, 0);
+  will-change: transform;
+}
+
 .fade-enter-active {
   transition: opacity 1.5s;
 }

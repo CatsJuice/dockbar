@@ -38,6 +38,7 @@ interface DragState {
   outside: boolean
   placeholder: HTMLDivElement
   preview: DockItem | null
+  previewPosition: DragPreviewPosition | null
   pointerId: number
   pointerOffset: {
     x: number
@@ -59,8 +60,18 @@ interface DragPreviewPosition {
   top: number
 }
 
+interface PointerPosition {
+  clientX: number
+  clientY: number
+}
+
+interface PendingDragMove extends PointerPosition {
+  pointerId: number
+}
+
 const DRAG_START_DISTANCE = 6
 const DRAG_SCALE = 1.08
+const DRAG_BOUNDARY_INSET = 4
 const REORDER_DURATION = 220
 const REORDER_EASE = 'cubic-bezier(0.22, 1, 0.36, 1)'
 const SNAP_BACK_EASE = 'cubic-bezier(0.34, 1.56, 0.64, 1)'
@@ -130,10 +141,13 @@ function isDockLayoutChild(node: Element): node is DockLayoutChild {
 export class DockWrapper extends LitElement {
   private _children: DockItem[] = []
   private _layoutChildren: DockLayoutChild[] = []
+  private _dragFrame: number | null = null
   private _dragState: DragState | null = null
+  private _hoverFrame: number | null = null
   private _mousePos = { x: 0, y: 0 }
   private _moving = false
-  private _overflowed = false
+  private _pendingDragMove: PendingDragMove | null = null
+  private _pendingHoverMove: PointerPosition | null = null
   private _ready = false
   private _suppressClick = false
 
@@ -150,20 +164,20 @@ export class DockWrapper extends LitElement {
       e.preventDefault()
   }
 
-  private readonly onHostMouseenter = () => {}
-
   private readonly onHostMouseleave = () => {
+    this.cancelHoverFrame()
+    this._mousePos = { x: 0, y: 0 }
     this.resetAll()
   }
 
   private readonly onHostMousemove = (e: MouseEvent) => {
     if (this._dragState?.active)
       return
-    this.applyHoverScale(e.clientX, e.clientY)
+    this.queueHoverScale(e.clientX, e.clientY)
   }
 
   private readonly onHostPointerDown = (e: PointerEvent) => {
-    if (!this.sortableValue || this.disabledValue || e.button !== 0)
+    if (this._dragState || !this.sortableValue || this.disabledValue || e.button !== 0)
       return
 
     const item = this.getDockItemFromEvent(e)
@@ -189,6 +203,7 @@ export class DockWrapper extends LitElement {
       outside: false,
       placeholder: this.createPlaceholder(originRect),
       preview: null,
+      previewPosition: null,
       pointerId: e.pointerId,
       pointerOffset: {
         x: e.clientX - originRect.left,
@@ -221,23 +236,7 @@ export class DockWrapper extends LitElement {
 
     e.preventDefault()
     this._suppressClick = true
-    const dockRect = this.getBoundingClientRect()
-    const insideDock = this.isPointInsideRect(dockRect, e.clientX, e.clientY)
-
-    if (!insideDock) {
-      this.updateDragPreviewPosition(dragState, e.clientX, e.clientY)
-      this.handleDragOutside()
-      return
-    }
-
-    this.updateDragPreviewPosition(dragState, e.clientX, e.clientY, true)
-
-    if (!this.isPointInsideDragBlock(dragState, e.clientX, e.clientY)) {
-      this.handleDragOutsideBlock()
-      return
-    }
-
-    this.handleDragInside(e.clientX, e.clientY)
+    this.queueDragMove(e.clientX, e.clientY, e.pointerId)
   }
 
   private readonly onWindowPointerUp = (e: PointerEvent) => {
@@ -248,6 +247,25 @@ export class DockWrapper extends LitElement {
     window.removeEventListener('pointermove', this.onWindowPointerMove)
     window.removeEventListener('pointerup', this.onWindowPointerUp)
     window.removeEventListener('pointercancel', this.onWindowPointerUp)
+
+    if (e.type === 'pointercancel') {
+      this.cancelDragFrame()
+      if (dragState.active)
+        this.cancelDrag(dragState)
+      else
+        this._dragState = null
+      return
+    }
+
+    if (dragState.active) {
+      this._pendingDragMove = {
+        clientX: e.clientX,
+        clientY: e.clientY,
+        pointerId: e.pointerId,
+      }
+    }
+    this.flushDragMove()
+    this.cancelDragFrame()
 
     if (!dragState.active) {
       this._dragState = null
@@ -342,19 +360,33 @@ export class DockWrapper extends LitElement {
     return asBoolean(this.willChange)
   }
 
+  connectedCallback(): void {
+    super.connectedCallback()
+    if (this.hasUpdated)
+      this.observe()
+  }
+
   disconnectedCallback(): void {
     super.disconnectedCallback()
-    this._dragState?.preview?.remove()
+    const dragState = this._dragState
+    this.cancelDragFrame()
+    this.cancelHoverFrame()
+    dragState?.preview?.remove()
+    dragState?.placeholder.remove()
+    if (dragState?.active)
+      this.resetDraggedItemStyle(dragState.item)
+    this._dragState = null
+    this._moving = false
+    this._suppressClick = false
+    this._ready = false
     this.shadowRoot?.host?.removeEventListener('click', this.onHostClick as EventListener, true)
     this.shadowRoot?.host?.removeEventListener('dragstart', this.onHostDragStart as EventListener)
-    this.shadowRoot?.host?.removeEventListener('mouseenter', this.onHostMouseenter as EventListener)
     this.shadowRoot?.host?.removeEventListener('mouseleave', this.onHostMouseleave as EventListener)
     this.shadowRoot?.host?.removeEventListener('mousemove', this.onHostMousemove as EventListener)
     this.shadowRoot?.host?.removeEventListener('pointerdown', this.onHostPointerDown as EventListener)
     window.removeEventListener('pointermove', this.onWindowPointerMove)
     window.removeEventListener('pointerup', this.onWindowPointerUp)
     window.removeEventListener('pointercancel', this.onWindowPointerUp)
-    window.removeEventListener('resize', this.onResize)
   }
 
   get className() {
@@ -386,15 +418,29 @@ export class DockWrapper extends LitElement {
   }
 
   updated(changedProperties: Map<string, unknown>) {
-    if (changedProperties.has('direction'))
-      setTimeout(this.onResize)
+    if (changedProperties.has('direction')) {
+      this.cancelHoverFrame()
+      this._mousePos = { x: 0, y: 0 }
+    }
+    if (changedProperties.has('disabled') && this.disabledValue) {
+      this.cancelHoverFrame()
+      this.resetAll()
+    }
     if (changedProperties.has('willChange'))
       this.onWillChangeChanged(this.willChangeValue)
     if (['size', 'gap', 'easing', 'direction'].some(key => changedProperties.has(key)))
       this.provideSharedProps()
   }
 
-  private applyHoverScale(clientX: number, clientY: number) {
+  private applyHoverScale(
+    clientX: number,
+    clientY: number,
+    measuredItems?: DockItem[],
+    measuredRects?: Map<DockItem, DOMRect>,
+  ) {
+    if (this.disabledValue)
+      return
+
     const { x, y } = this._mousePos
     const offset = this.direction === 'horizontal' ? clientX - x : clientY - y
 
@@ -403,13 +449,14 @@ export class DockWrapper extends LitElement {
 
     this._mousePos = { x: clientX, y: clientY }
 
-    const rect = this.getBoundingClientRect()
-    if (!rect || this.disabledValue || this._overflowed)
-      return
-
     const pointerPosition = this.direction === 'horizontal' ? clientX : clientY
-    this.getVisibleDockItems().forEach((child) => {
-      const childRect = child.getBoundingClientRect()
+    const items = measuredItems ?? this.getVisibleDockItems()
+    const itemRects = items.map((child) => {
+      return measuredRects?.get(child) ?? child.getBoundingClientRect()
+    })
+
+    items.forEach((child, index) => {
+      const childRect = itemRects[index]
       const center = this.direction === 'horizontal'
         ? childRect.left + childRect.width / 2
         : childRect.top + childRect.height / 2
@@ -423,7 +470,77 @@ export class DockWrapper extends LitElement {
         this.maxRangeValue,
         this.maxScaleValue,
       )
-      child.setAttribute('scale', `${scale}`)
+      this.setItemScale(child, scale)
+    })
+  }
+
+  private cancelDragFrame() {
+    if (this._dragFrame !== null)
+      cancelAnimationFrame(this._dragFrame)
+    this._dragFrame = null
+    this._pendingDragMove = null
+  }
+
+  private cancelHoverFrame() {
+    if (this._hoverFrame !== null)
+      cancelAnimationFrame(this._hoverFrame)
+    this._hoverFrame = null
+    this._pendingHoverMove = null
+  }
+
+  private flushDragMove() {
+    const move = this._pendingDragMove
+    this._pendingDragMove = null
+    if (!move || move.pointerId !== this._dragState?.pointerId)
+      return
+    this.processDragMove(move.clientX, move.clientY)
+  }
+
+  private processDragMove(clientX: number, clientY: number) {
+    const dragState = this._dragState
+    if (!dragState?.active)
+      return
+
+    const dockRect = this.getBoundingClientRect()
+    if (!this.isPointInsideRect(dockRect, clientX, clientY)) {
+      this.handleDragOutside()
+      this.updateDragPreviewPosition(dragState, clientX, clientY)
+      return
+    }
+
+    const bounds = this.getDragBlockBounds(dragState, dockRect)
+    if (!this.isPointInsideDragBlock(bounds, clientX, clientY)) {
+      this.handleDragOutsideBlock()
+      this.updateDragPreviewPosition(dragState, clientX, clientY, bounds)
+      return
+    }
+
+    this.handleDragInside(clientX, clientY)
+    this.updateDragPreviewPosition(dragState, clientX, clientY, bounds)
+  }
+
+  private queueDragMove(clientX: number, clientY: number, pointerId: number) {
+    this._pendingDragMove = { clientX, clientY, pointerId }
+    if (this._dragFrame !== null)
+      return
+    this._dragFrame = requestAnimationFrame(() => {
+      this._dragFrame = null
+      this.flushDragMove()
+    })
+  }
+
+  private queueHoverScale(clientX: number, clientY: number) {
+    if (this.disabledValue)
+      return
+    this._pendingHoverMove = { clientX, clientY }
+    if (this._hoverFrame !== null)
+      return
+    this._hoverFrame = requestAnimationFrame(() => {
+      this._hoverFrame = null
+      const move = this._pendingHoverMove
+      this._pendingHoverMove = null
+      if (move)
+        this.applyHoverScale(move.clientX, move.clientY)
     })
   }
 
@@ -432,37 +549,50 @@ export class DockWrapper extends LitElement {
     rect: DOMRect,
     { ease = SNAP_BACK_EASE, onComplete }: { ease?: string; onComplete?: () => void } = {},
   ) {
+    const finish = () => {
+      if (this._dragState === dragState)
+        onComplete?.()
+    }
+
     if (!dragState.preview?.isConnected) {
-      onComplete?.()
+      finish()
       return
     }
 
+    const previewPosition = dragState.previewPosition ?? {
+      left: rect.left,
+      top: rect.top,
+    }
     const animation = {
       duration: REORDER_DURATION,
       ease,
-      left: `${rect.left}px`,
       scale: [DRAG_SCALE, 1],
-      top: `${rect.top}px`,
+      translateX: [previewPosition.left, rect.left],
+      translateY: [previewPosition.top, rect.top],
     } as Record<string, unknown>
 
     if (onComplete)
-      animation.onComplete = onComplete
+      animation.onComplete = finish
 
     animate(dragState.preview, animation as any)
   }
 
   private animateLayout(items: HTMLElement[], beforeRects: Map<HTMLElement, DOMRect>) {
-    items.forEach((item) => {
+    const movements = items.flatMap((item) => {
       const before = beforeRects.get(item)
       if (!before || !item.isConnected)
-        return
+        return []
 
       const after = item.getBoundingClientRect()
       const deltaX = before.left - after.left
       const deltaY = before.top - after.top
       if (Math.abs(deltaX) < 0.5 && Math.abs(deltaY) < 0.5)
-        return
+        return []
 
+      return [{ deltaX, deltaY, item }]
+    })
+
+    movements.forEach(({ deltaX, deltaY, item }) => {
       item.style.willChange = 'transform'
       animate(item, {
         duration: REORDER_DURATION,
@@ -475,6 +605,7 @@ export class DockWrapper extends LitElement {
   }
 
   private beginDrag(dragState: DragState, clientX: number, clientY: number) {
+    this.cancelHoverFrame()
     dragState.active = true
     dragState.currentIndex = dragState.originBlockIndex
     this._moving = true
@@ -533,24 +664,33 @@ export class DockWrapper extends LitElement {
     Array.from(dragState.item.childNodes).forEach((node) => {
       preview.appendChild(node.cloneNode(true))
     })
+    preview.direction = dragState.item.direction
+    preview.easing = dragState.item.easing
+    preview.gap = dragState.item.gap
+    preview.scale = dragState.item.scale
+    preview.size = dragState.item.size
+    preview.width = dragState.item.width
     preview.setAttribute('aria-hidden', 'true')
     preview.setAttribute('data-dock-preview', '')
     this.disablePreviewAnimations(preview)
 
+    const previewPosition = this.getDragPreviewPosition(dragState, clientX, clientY)
+    dragState.previewPosition = previewPosition
     Object.assign(preview.style, {
       animation: 'none',
       boxSizing: 'border-box',
       cursor: 'grabbing',
       height: `${dragState.originRect.height}px`,
-      left: `${clientX - dragState.pointerOffset.x}px`,
+      left: '0',
       margin: '0',
       pointerEvents: 'none',
       position: 'fixed',
-      top: `${clientY - dragState.pointerOffset.y}px`,
-      transform: `scale(${DRAG_SCALE})`,
+      top: '0',
+      transform: `translateX(${previewPosition.left}px) translateY(${previewPosition.top}px) translateZ(0) scale(${DRAG_SCALE})`,
       transformOrigin: `${dragState.pointerOffset.x}px ${dragState.pointerOffset.y}px`,
       transition: 'none',
       width: `${dragState.originRect.width}px`,
+      willChange: 'transform',
       zIndex: '10000',
     })
 
@@ -609,6 +749,7 @@ export class DockWrapper extends LitElement {
     this.dispatchDelete(dragState)
     if (!dragState.item.isConnected) {
       dragState.placeholder.remove()
+      this.resetDraggedItemStyle(dragState.item)
       this.cleanupAfterDrag()
       return
     }
@@ -619,6 +760,10 @@ export class DockWrapper extends LitElement {
       opacity: [1, 0],
       scale: [1, 0.9],
       onComplete: () => {
+        if (this._dragState !== dragState) {
+          this.resetDraggedItemStyle(dragState.item)
+          return
+        }
         dragState.placeholder.remove()
         this.resetDraggedItemStyle(dragState.item)
         dragState.item.style.display = 'none'
@@ -651,17 +796,14 @@ export class DockWrapper extends LitElement {
   }
 
   private getDockItems() {
-    this.syncChildren()
     return this._children
   }
 
   private getDockSeparators() {
-    this.syncChildren()
     return this._layoutChildren.filter(isDockSeparatorElement)
   }
 
   private getLayoutChildren() {
-    this.syncChildren()
     return this._layoutChildren
   }
 
@@ -685,8 +827,7 @@ export class DockWrapper extends LitElement {
     }
   }
 
-  private getDragBlockBounds(dragState: DragState): DragBlockBounds {
-    const dockRect = this.getBoundingClientRect()
+  private getDragBlockBounds(dragState: DragState, dockRect: DOMRect): DragBlockBounds {
     const previousRect = dragState.block.previousSeparator?.getBoundingClientRect()
     const nextRect = dragState.block.nextSeparator?.getBoundingClientRect()
 
@@ -712,16 +853,18 @@ export class DockWrapper extends LitElement {
     dragState: DragState,
     clientX: number,
     clientY: number,
+    bounds: DragBlockBounds,
   ): DragPreviewPosition {
     const position = this.getDragPreviewPosition(dragState, clientX, clientY)
-    const { max, min } = this.getDragBlockBounds(dragState)
+    const { max, min } = bounds
     const scaleOffset = DRAG_SCALE - 1
 
     if (this.direction === 'horizontal') {
-      const minLeft = min + dragState.pointerOffset.x * scaleOffset
+      const minLeft = min + dragState.pointerOffset.x * scaleOffset + DRAG_BOUNDARY_INSET
       const maxLeft = max
         - dragState.originRect.width
         - (dragState.originRect.width - dragState.pointerOffset.x) * scaleOffset
+        - DRAG_BOUNDARY_INSET
 
       return {
         ...position,
@@ -729,10 +872,11 @@ export class DockWrapper extends LitElement {
       }
     }
 
-    const minTop = min + dragState.pointerOffset.y * scaleOffset
+    const minTop = min + dragState.pointerOffset.y * scaleOffset + DRAG_BOUNDARY_INSET
     const maxTop = max
       - dragState.originRect.height
       - (dragState.originRect.height - dragState.pointerOffset.y) * scaleOffset
+      - DRAG_BOUNDARY_INSET
 
     return {
       ...position,
@@ -740,15 +884,21 @@ export class DockWrapper extends LitElement {
     }
   }
 
-  private getInsertionIndex(pointerX: number, pointerY: number) {
+  private getInsertionIndex(
+    pointerX: number,
+    pointerY: number,
+    measuredItems?: DockItem[],
+    measuredRects?: Map<DockItem, DOMRect>,
+  ) {
     const dragState = this._dragState
-    const items = dragState ? this.getVisibleBlockItems(dragState) : this.getVisibleDockItems()
+    const items = measuredItems
+      ?? (dragState ? this.getVisibleBlockItems(dragState) : this.getVisibleDockItems())
     if (!items.length)
       return 0
 
     const pointerValue = this.direction === 'horizontal' ? pointerX : pointerY
     for (const [index, item] of items.entries()) {
-      const rect = item.getBoundingClientRect()
+      const rect = measuredRects?.get(item) ?? item.getBoundingClientRect()
       const center = this.direction === 'horizontal'
         ? rect.left + rect.width / 2
         : rect.top + rect.height / 2
@@ -778,11 +928,31 @@ export class DockWrapper extends LitElement {
     if (!dragState)
       return
 
-    const beforeRects = this.measureLayout(this.getVisibleLayoutChildren())
+    const hoverItems = this.getVisibleDockItems()
+    const itemRects = new Map(
+      hoverItems.map(item => [item, item.getBoundingClientRect()] as const),
+    )
+    const insertionIndex = this.getInsertionIndex(
+      clientX,
+      clientY,
+      this.getVisibleBlockItems(dragState),
+      itemRects,
+    )
+    const layoutChanged = dragState.invalid
+      || dragState.outside
+      || insertionIndex !== dragState.currentIndex
+
+    if (!layoutChanged) {
+      this.applyHoverScale(clientX, clientY, hoverItems, itemRects)
+      return
+    }
+
+    const layoutChildren = this.getVisibleLayoutChildren()
+    const beforeRects = this.measureLayout(layoutChildren, itemRects)
     dragState.invalid = false
     dragState.outside = false
-    this.movePlaceholder(this.getInsertionIndex(clientX, clientY), false)
-    this.animateLayout(this.getVisibleLayoutChildren(), beforeRects)
+    this.movePlaceholder(insertionIndex, false)
+    this.animateLayout(layoutChildren, beforeRects)
     this.updateDraggedItemPosition(dragState, dragState.placeholder.getBoundingClientRect())
     this.applyHoverScale(clientX, clientY)
   }
@@ -820,15 +990,20 @@ export class DockWrapper extends LitElement {
       && clientY <= rect.bottom
   }
 
-  private isPointInsideDragBlock(dragState: DragState, clientX: number, clientY: number) {
-    const { max, min } = this.getDragBlockBounds(dragState)
+  private isPointInsideDragBlock(bounds: DragBlockBounds, clientX: number, clientY: number) {
+    const { max, min } = bounds
     const pointerValue = this.direction === 'horizontal' ? clientX : clientY
 
     return pointerValue >= min && pointerValue <= max
   }
 
-  private measureLayout(items: HTMLElement[]) {
-    return new Map(items.map(item => [item, item.getBoundingClientRect()] as const))
+  private measureLayout(items: HTMLElement[], measuredRects?: Map<DockItem, DOMRect>) {
+    return new Map(items.map((item) => {
+      const rect = isDockItemElement(item)
+        ? measuredRects?.get(item) ?? item.getBoundingClientRect()
+        : item.getBoundingClientRect()
+      return [item, rect] as const
+    }))
   }
 
   private movePlaceholder(index: number, hidden: boolean) {
@@ -837,16 +1012,22 @@ export class DockWrapper extends LitElement {
       return
 
     const items = this.getVisibleBlockItems(dragState)
+    const display = hidden ? 'none' : 'block'
+    if (dragState.placeholder.style.display !== display)
+      dragState.placeholder.style.display = display
     dragState.currentIndex = index
-    dragState.placeholder.style.display = hidden ? 'none' : 'block'
 
     const referenceItem = items[index]
-    if (referenceItem)
-      this.insertBefore(dragState.placeholder, referenceItem)
-    else if (dragState.block.nextSeparator?.isConnected)
-      this.insertBefore(dragState.placeholder, dragState.block.nextSeparator)
-    else
+    const referenceNode = referenceItem
+      ?? (dragState.block.nextSeparator?.isConnected ? dragState.block.nextSeparator : null)
+
+    if (referenceNode) {
+      if (dragState.placeholder.nextSibling !== referenceNode)
+        this.insertBefore(dragState.placeholder, referenceNode)
+    }
+    else if (dragState.placeholder.parentNode !== this || dragState.placeholder.nextSibling !== null) {
       this.appendChild(dragState.placeholder)
+    }
   }
 
   private observe() {
@@ -855,21 +1036,9 @@ export class DockWrapper extends LitElement {
     this._ready = true
     this.shadowRoot?.host?.addEventListener('click', this.onHostClick as EventListener, true)
     this.shadowRoot?.host?.addEventListener('dragstart', this.onHostDragStart as EventListener)
-    this.shadowRoot?.host?.addEventListener('mouseenter', this.onHostMouseenter as EventListener)
     this.shadowRoot?.host?.addEventListener('mouseleave', this.onHostMouseleave as EventListener)
     this.shadowRoot?.host?.addEventListener('mousemove', this.onHostMousemove as EventListener)
     this.shadowRoot?.host?.addEventListener('pointerdown', this.onHostPointerDown as EventListener)
-    window.addEventListener('resize', this.onResize)
-    this.onResize()
-  }
-
-  private readonly onResize = () => {
-    // TODO: not working when html is formatted
-    // const side = this.direction === 'horizontal' ? 'right' : 'bottom'
-    // const lastChildRight = (this.shadowRoot?.host?.lastChild as HTMLElement)?.getBoundingClientRect()?.[side]
-    // const wrapperRight = this.shadowRoot?.host?.getBoundingClientRect()?.[side]
-    // this._overflowed = !!wrapperRight && !!wrapperRight && lastChildRight > wrapperRight
-    // this.renderRoot.querySelector('ul')?.classList?.toggle('overflowed', this._overflowed)
   }
 
   private onSlotChange(e: Event) {
@@ -881,8 +1050,10 @@ export class DockWrapper extends LitElement {
   }
 
   private onWillChangeChanged(v: boolean) {
+    const value = v ? 'width, height' : 'auto'
     this.getDockItems().forEach((child) => {
-      child.style.setProperty('will-change', v ? 'width, height' : 'none')
+      if (child.style.getPropertyValue('--dock-item-will-change') !== value)
+        child.style.setProperty('--dock-item-will-change', value)
     })
   }
 
@@ -904,14 +1075,14 @@ export class DockWrapper extends LitElement {
 
   private provideSharedProps() {
     this.getDockItems().forEach((el) => {
-      el.setAttribute('direction', `${this.direction}`)
-      el.setAttribute('easing', `${this.easing}`)
-      el.setAttribute('gap', `${this.gapValue}`)
-      el.setAttribute('size', `${this.sizeValue}`)
+      this.setAttributeIfChanged(el, 'direction', this.direction)
+      this.setAttributeIfChanged(el, 'easing', this.easing)
+      this.setAttributeIfChanged(el, 'gap', this.gapValue)
+      this.setAttributeIfChanged(el, 'size', this.sizeValue)
     })
     this.getDockSeparators().forEach((el) => {
-      el.setAttribute('direction', `${this.direction}`)
-      el.setAttribute('size', `${this.sizeValue}`)
+      this.setAttributeIfChanged(el, 'direction', this.direction)
+      this.setAttributeIfChanged(el, 'size', this.sizeValue)
     })
   }
 
@@ -920,8 +1091,20 @@ export class DockWrapper extends LitElement {
     this.getDockItems().forEach((child) => {
       if (child.style.display === 'none' || child === draggedItem)
         return
-      child.setAttribute('scale', '1')
+      this.setItemScale(child, 1)
     })
+  }
+
+  private setItemScale(item: DockItem, scale: number) {
+    if (Math.abs(item.scale - scale) <= 0.0001)
+      return
+    item.scale = scale
+  }
+
+  private setAttributeIfChanged(element: Element, name: string, value: number | string) {
+    const nextValue = `${value}`
+    if (element.getAttribute(name) !== nextValue)
+      element.setAttribute(name, nextValue)
   }
 
   private resetDraggedItemStyle(item: DockItem) {
@@ -969,17 +1152,17 @@ export class DockWrapper extends LitElement {
     dragState: DragState,
     clientX: number,
     clientY: number,
-    constrainToBlock = false,
+    bounds?: DragBlockBounds,
   ) {
     if (!dragState.preview)
       return
 
-    const position = constrainToBlock
-      ? this.getConstrainedDragPreviewPosition(dragState, clientX, clientY)
+    const position = bounds
+      ? this.getConstrainedDragPreviewPosition(dragState, clientX, clientY, bounds)
       : this.getDragPreviewPosition(dragState, clientX, clientY)
 
-    dragState.preview.style.left = `${position.left}px`
-    dragState.preview.style.top = `${position.top}px`
+    dragState.previewPosition = position
+    dragState.preview.style.transform = `translateX(${position.left}px) translateY(${position.top}px) translateZ(0) scale(${DRAG_SCALE})`
   }
 
   private updateDraggedItemPosition(dragState: DragState, rect: Pick<DOMRect, 'left' | 'top'>) {
