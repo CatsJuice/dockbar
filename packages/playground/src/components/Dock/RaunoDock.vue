@@ -1,7 +1,10 @@
 <script lang="ts" setup>
 import 'dockbar'
 
-const svgPromises = import.meta.glob('~/assets/rauno/*.svg', { as: 'raw' })
+const svgPromises = import.meta.glob<string>('~/assets/rauno/*.svg', {
+  import: 'default',
+  query: '?raw',
+})
 const svgLib: Record<string, string> = reactive({})
 Object.entries(svgPromises).forEach(([path, promise]) => {
   promise().then((svg) => {

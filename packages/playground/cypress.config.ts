@@ -2,6 +2,7 @@ import { defineConfig } from 'cypress'
 import vitePreprocessor from 'cypress-vite'
 
 export default defineConfig({
+  allowCypressEnv: false,
   e2e: {
     baseUrl: 'http://localhost:3333',
     chromeWebSecurity: false,

@@ -18,7 +18,7 @@ export class DockSeparator extends LitElement {
   @property({ type: Number })
   thickness = 1
 
-  get className() {
+  override get className() {
     return `${this.direction} dock-separator`
   }
 
@@ -44,7 +44,7 @@ export class DockSeparator extends LitElement {
       .join(';')
   }
 
-  render() {
+  override render() {
     return html`
       <li
         aria-orientation=${this.orientation}
@@ -57,7 +57,7 @@ export class DockSeparator extends LitElement {
     `
   }
 
-  static styles = css`
+  static override styles = css`
     :host {
       display: block;
       flex: 0 0 auto;

@@ -1,0 +1,16 @@
+.git
+.github
+.idea
+.vscode
+.DS_Store
+
+**/node_modules
+.pnpm-store
+**/dist
+**/.nuxt
+**/.output
+**/.vite-ssg-temp
+
+*.log
+playwright-report
+test-results

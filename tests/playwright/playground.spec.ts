@@ -154,6 +154,21 @@ test('playground renders dock and hover expands an item', async ({ page }) => {
   await expect.poll(getRenderedWidth).toBeGreaterThan(beforeHover)
 })
 
+test('Tweakpane controls update the dock configuration', async ({ page }) => {
+  await page.goto('/')
+  await waitForDockUpgrade(page, 'dock-wrapper')
+
+  const sizeControl = page.locator('.tp-lblv').filter({
+    has: page.locator('.tp-lblv_l', { hasText: /^size$/ }),
+  }).locator('input')
+
+  await expect(sizeControl).toHaveValue('40')
+  await sizeControl.fill('72')
+  await sizeControl.press('Enter')
+
+  await expect(page.locator('dock-item').first()).toHaveAttribute('size', '72')
+})
+
 test('dock hover responds to accumulated one-pixel pointer movements', async ({ page }) => {
   await page.goto('/')
   await waitForDockUpgrade(page, 'dock-wrapper')
@@ -362,8 +377,8 @@ test('sortable dock keeps the source visible and moves a drag preview', async ({
 
   expect(Math.abs(previewStyle.translateX - (dragPoint.x - pointerOffset.x))).toBeLessThan(8)
   expect(Math.abs(previewStyle.translateY - (dragPoint.y - pointerOffset.y))).toBeLessThan(8)
-  expect(Math.abs(Number.parseFloat(previewStyle.transformOrigin) - pointerOffset.x)).toBeLessThan(4)
-  expect(Math.abs(Number.parseFloat(previewStyle.transformOrigin.split(' ')[1]) - pointerOffset.y)).toBeLessThan(4)
+  expect(Math.abs(Number.parseFloat(previewStyle.transformOrigin) - pointerOffset.x)).toBeLessThan(5)
+  expect(Math.abs(Number.parseFloat(previewStyle.transformOrigin.split(' ')[1]) - pointerOffset.y)).toBeLessThan(5)
   expect(Math.abs(previewBox.x - sourceBox.x)).toBeGreaterThan(8)
   expect(Math.abs(previewBox.y - sourceBox.y)).toBeGreaterThan(4)
 

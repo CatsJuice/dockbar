@@ -15,7 +15,7 @@
 
 <br>
 
-> **Note**: 本模板创建于 Vue 3 和 Vite 的早期过渡时期。目前，如果您正在寻求更好的 Vue 开发体验和更持续的维护，我们建议您使用 [Nuxt 3](https://nuxt.com) 来代替（它也可以根据需要使用 SPA 或 SSG）。本模板仍会作为参考缓慢地维护下去，但将不会有太多的更新。
+> **Note**: 本模板创建于 Vue 3 和 Vite 的早期过渡时期。如果你需要完整的 Vue 全栈框架，可以考虑使用 [Nuxt](https://nuxt.com)（它也支持 SPA 和 SSG）。本模板继续作为参考保留。
 
 <br>
 
@@ -34,10 +34,6 @@
 
 - 📦 [组件自动化加载](./src/components)
 
-- 🍍 [使用 Pinia 的状态管理](https://pinia.vuejs.org)
-
-- 📑 [布局系统](./src/layouts)
-
 - 📲 [PWA](https://github.com/antfu/vite-plugin-pwa)
 
 - 🎨 [UnoCSS](https://github.com/unocss/unocss) - 高性能且极具灵活性的即时原子化 CSS 引擎
@@ -54,7 +50,7 @@
 
 - 🖨 使用 [vite-ssg](https://github.com/antfu/vite-ssg) 进行服务端生成 (SSG)
 
-- 🦔 使用 [critters](https://github.com/GoogleChromeLabs/critters) 的生成关键 CSS
+- 🦔 使用 [Beasties](https://github.com/danielroe/beasties) 生成关键 CSS
 
 - 🦾 TypeScript, 当然
 
@@ -79,8 +75,6 @@
 
 - [Vue Router](https://github.com/vuejs/router)
   - [`vite-plugin-pages`](https://github.com/hannoeru/vite-plugin-pages) - 以文件系统为基础的路由
-  - [`vite-plugin-vue-layouts`](https://github.com/JohnCampionJr/vite-plugin-vue-layouts) - 页面布局系统
-- [Pinia](https://pinia.vuejs.org) - 直接的, 类型安全的, 使用 Composition API 的轻便灵活的 Vue 状态管理
 - [`unplugin-vue-components`](https://github.com/antfu/unplugin-vue-components) - 自动加载组件
 - [`unplugin-auto-import`](https://github.com/antfu/unplugin-auto-import) - 直接使用 Composition API 等，无需导入
 - [`vite-plugin-pwa`](https://github.com/antfu/vite-plugin-pwa) - PWA
@@ -91,7 +85,7 @@
   - [`unplugin-vue-i18n`](https://github.com/intlify/bundle-tools/tree/main/packages/unplugin-vue-i18n) - Vue I18n 的 Vite 插件
 - [VueUse](https://github.com/antfu/vueuse) - 实用的 Composition API 工具合集
 - [`vite-ssg-sitemap`](https://github.com/jbaubree/vite-ssg-sitemap) - 站点地图生成器
-- [`@vueuse/head`](https://github.com/vueuse/head) - 响应式地操作文档头信息
+- [`@unhead/vue`](https://unhead.unjs.io/) - 响应式地操作文档头信息
 - [`vite-plugin-vue-devtools`](https://github.com/webfansplz/vite-plugin-vue-devtools) - 旨在增强Vue开发者体验的Vite插件
 
 ### 编码风格
@@ -105,7 +99,7 @@
 - [Cypress](https://cypress.io/) - E2E 测试
 - [pnpm](https://pnpm.js.org/) - 快, 节省磁盘空间的包管理器
 - [`vite-ssg`](https://github.com/antfu/vite-ssg) - 服务端生成
-  - [critters](https://github.com/GoogleChromeLabs/critters) - 关键 CSS 生成器
+  - [Beasties](https://github.com/danielroe/beasties) - 关键 CSS 生成器
 - [Netlify](https://www.netlify.com/) - 零配置的部署
 - [VS Code 扩展](./.vscode/extensions.json)
   - [Vite](https://marketplace.visualstudio.com/items?itemName=antfu.vite) - 自动启动 Vite 服务器
@@ -118,14 +112,14 @@
 
 由于这个模板的业务场景非常的局限，下面提供了一个精心策划的列表，列出了社区维护的具有不同偏好和功能集的衍生项目。也可以看看他们。当然也欢迎你 PR 提供自己的项目！
 
-###### 官方
+### 官方
 
 - [vitesse-lite](https://github.com/antfu/vitesse-lite) - Vitesse 的轻量版本
-- [vitesse-nuxt3](https://github.com/antfu/vitesse-nuxt3) - Vitesse 的 Nuxt 3 版本
+- [vitesse-nuxt3](https://github.com/antfu/vitesse-nuxt3) - Vitesse 的 Nuxt 版本
 - [vitesse-nuxt-bridge](https://github.com/antfu/vitesse-nuxt-bridge) - Vitesse 的 Nuxt2 桥接版本
 - [vitesse-webext](https://github.com/antfu/vitesse-webext) - 开箱即用的浏览器扩展 vite 模板
 
-###### 社区
+### 社区
 
 [查看英文版](./README.md#community)
 

@@ -1,9 +1,9 @@
 <p align="center">
-<img src="https://user-images.githubusercontent.com/11247099/140462375-7b7ac4db-35b7-453c-8a05-13d8d20282c4.png" width="600"/>
+<img src="https://user-images.githubusercontent.com/11247099/140462375-7b7ac4db-35b7-453c-8a05-13d8d20282c4.png" width="600" alt="Vitesse preview"/>
 </p>
 
 <h2 align="center">
-<a href="https://github.com/antfu/vitesse">Vitesse</a> for Nuxt 3
+<a href="https://github.com/antfu/vitesse">Vitesse</a> for Nuxt 4
 </h2><br>
 
 <pre align="center">
@@ -19,7 +19,7 @@
 
 ## Features
 
-- 💚 [Nuxt 3](https://nuxt.com/) - SSR, ESR, File-based routing, components auto importing, modules, etc.
+- 💚 [Nuxt 4](https://nuxt.com/) - SSR, ESR, file-based routing, component auto-importing, modules, etc.
 
 - ⚡️ Vite - Instant HMR.
 
@@ -28,8 +28,6 @@
 - 😃 Use icons from any icon sets in Pure CSS, powered by [UnoCSS](https://github.com/unocss/unocss).
 
 - 🔥 The `<script setup>` syntax.
-
-- 🍍 [State Management via Pinia](https://github.com/vuejs/pinia), see [./composables/user.ts](./composables/user.ts).
 
 - 📑 [Layout system](./layouts).
 
@@ -49,8 +47,7 @@
 - [VueUse](https://github.com/vueuse/vueuse) - collection of useful composition APIs.
 - [ColorMode](https://github.com/nuxt-modules/color-mode) - dark and Light mode with auto detection made easy with Nuxt.
 - [UnoCSS](https://github.com/unocss/unocss) - the instant on-demand atomic CSS engine.
-- [Pinia](https://github.com/vuejs/pinia) - intuitive, type safe, light and flexible Store for Vue.
-- [VitePWA](https://github.com/vite-pwa/nuxt) - zero-config PWA Plugin for Nuxt 3.
+- [VitePWA](https://github.com/vite-pwa/nuxt) - zero-config PWA plugin for Nuxt 4.
 - [DevTools](https://github.com/nuxt/devtools) - unleash Nuxt Developer Experience.
 
 ## IDE

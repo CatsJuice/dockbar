@@ -1,9 +1,9 @@
 import path from 'node:path'
-import { defineConfig } from 'vite'
+import { unheadVueComposablesImports } from '@unhead/vue'
+import { defineConfig } from 'vitest/config'
 import Vue from '@vitejs/plugin-vue'
 import Pages from 'vite-plugin-pages'
 import generateSitemap from 'vite-ssg-sitemap'
-import Layouts from 'vite-plugin-vue-layouts'
 import Components from 'unplugin-vue-components/vite'
 import AutoImport from 'unplugin-auto-import/vite'
 import { VitePWA } from 'vite-plugin-pwa'
@@ -34,16 +34,13 @@ export default defineConfig({
       extensions: ['vue'],
     }),
 
-    // https://github.com/JohnCampionJr/vite-plugin-vue-layouts
-    Layouts(),
-
     // https://github.com/antfu/unplugin-auto-import
     AutoImport({
       imports: [
         'vue',
         'vue-router',
         'vue-i18n',
-        '@vueuse/head',
+        unheadVueComposablesImports,
         '@vueuse/core',
       ],
       dts: 'src/auto-imports.d.ts',
@@ -105,8 +102,10 @@ export default defineConfig({
   test: {
     include: ['test/**/*.test.ts'],
     environment: 'jsdom',
-    deps: {
-      inline: ['@vue', '@vueuse', 'vue-demi'],
+    server: {
+      deps: {
+        inline: ['@vue', '@vueuse'],
+      },
     },
   },
 
@@ -114,7 +113,7 @@ export default defineConfig({
   ssgOptions: {
     script: 'async',
     formatting: 'minify',
-    crittersOptions: {
+    beastiesOptions: {
       reduceInlineStyles: false,
     },
     onFinished() {

@@ -66,11 +66,11 @@ export class DockItem extends LitElement {
     return `${this.sizeStyle};${this.gapStyle}`
   }
 
-  get className() {
+  override get className() {
     return `${this.direction} dock-item`
   }
 
-  render() {
+  override render() {
     return html`
       <li class=${this.className} style=${this.liStyle}>
         <div class="dock-item__pos">
@@ -82,12 +82,12 @@ export class DockItem extends LitElement {
     `
   }
 
-  firstUpdated() {
+  override firstUpdated() {
     this._sizeElement = this.shadowRoot?.querySelector<HTMLElement>('.dock-item') ?? null
     this._scaleElement = this.shadowRoot?.querySelector<HTMLElement>('.dock-item__scale') ?? null
   }
 
-  updated(changedProperties: Map<string, unknown>) {
+  override updated(changedProperties: Map<string, unknown>) {
     if (changedProperties.has('size') || changedProperties.has('width'))
       this.onScaleChanged(this.scale)
   }
@@ -137,10 +137,10 @@ export class DockItem extends LitElement {
       this._scaleAnimation = createAnimatable(this._animatedScale, animationParameters)
     }
 
-    this._scaleAnimation.value(scale, 100, this.animationEase)
+    this._scaleAnimation.value!(scale, 100, this.animationEase)
   }
 
-  static styles = css`
+  static override styles = css`
     :host {
       display: block;
       flex: 0 0 auto;

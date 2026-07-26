@@ -1,3 +1,20 @@
 packages:
   - packages/*
   - examples/*
+allowBuilds:
+  '@parcel/watcher': true
+  cypress: true
+  esbuild: true
+  simple-git-hooks: true
+minimumReleaseAgeExclude:
+  - '@vue/devtools-core@8.2.1'
+  - '@vue/devtools-kit@8.2.1'
+  - '@vue/devtools-shared@8.2.1'
+  - vite-plugin-vue-devtools@8.2.1
+patchedDependencies:
+  vite-ssg@28.3.0: patches/vite-ssg@28.3.0.patch
+peerDependencyRules:
+  allowedVersions:
+    'vite-dev-rpc>vite': '8'
+    'vite-hot-client>vite': '8'
+    'vite-plugin-inspect>vite': '8'

@@ -1,36 +1,29 @@
-context('Basic', () => {
+context('Playground', () => {
   beforeEach(() => {
     cy.visit('/')
   })
 
-  it('basic nav', () => {
-    cy.url()
-      .should('eq', 'http://localhost:3333/')
+  it('renders the dock and applies configuration changes', () => {
+    cy.contains('h1', 'Dockbar')
+      .should('be.visible')
+    cy.get('dock-wrapper')
+      .should('be.visible')
+    cy.get('dock-item')
+      .its('length')
+      .should('be.greaterThan', 0)
 
-    cy.contains('[Home Layout]')
-      .should('exist')
+    cy.contains('.tp-lblv_l', 'size')
+      .parents('.tp-lblv')
+      .find('input')
+      .as('sizeInput')
 
-    cy.get('#input')
-      .type('Vitesse{Enter}')
-      .url()
-      .should('eq', 'http://localhost:3333/hi/Vitesse')
+    cy.get('@sizeInput')
+      .clear()
+    cy.get('@sizeInput')
+      .type('72{enter}')
 
-    cy.contains('[Default Layout]')
-      .should('exist')
-
-    cy.get('[btn]')
-      .click()
-      .url()
-      .should('eq', 'http://localhost:3333/')
-  })
-
-  it('markdown', () => {
-    cy.get('[data-test-id="about"]')
-      .click()
-      .url()
-      .should('eq', 'http://localhost:3333/about')
-
-    cy.get('.shiki')
-      .should('exist')
+    cy.get('dock-item')
+      .first()
+      .should('have.attr', 'size', '72')
   })
 })

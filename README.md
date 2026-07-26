@@ -1,6 +1,6 @@
 <!-- Logo -->
 <p align="center">
-  <img height="100" src="https://dock.oooo.so/dockbar.svg">
+  <img height="100" src="https://dock.oooo.so/dockbar.svg" alt="Dockbar logo">
 </p>
 
 <!-- Bridge -->
@@ -12,9 +12,9 @@
   that can be used in any framework.
 </p>
 <p align="center">
-  <img src="https://img.shields.io/npm/l/dockbar"/>
-  <img src="https://img.shields.io/npm/dw/dockbar"/>
-  <img src="https://img.shields.io/npm/v/dockbar"/>
+  <img src="https://img.shields.io/npm/l/dockbar" alt="npm license"/>
+  <img src="https://img.shields.io/npm/dw/dockbar" alt="weekly npm downloads"/>
+  <img src="https://img.shields.io/npm/v/dockbar" alt="npm version"/>
 </p>
 
 <!-- <p align="center">
@@ -201,7 +201,7 @@ There are some problems yet to be solved:
 Emitted after a sortable drag ends with a changed order.
 
 ```ts
-type DockSortDetail = {
+interface DockSortDetail {
   item: HTMLElement
   oldIndex: number
   newIndex: number
@@ -213,7 +213,7 @@ type DockSortDetail = {
 Emitted when `allow-drag-delete` is enabled and an item is released outside the dock.
 
 ```ts
-type DockDeleteDetail = {
+interface DockDeleteDetail {
   item: HTMLElement
   index: number
 }

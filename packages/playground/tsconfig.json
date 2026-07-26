@@ -1,6 +1,5 @@
 {
   "compilerOptions": {
-    "baseUrl": ".",
     "module": "ESNext",
     "target": "ESNext",
     "lib": ["DOM", "ESNext"],
@@ -22,11 +21,11 @@
       "vitest",
       "vite/client",
       "vite-plugin-pages/client",
-      "vite-plugin-vue-layouts/client",
       "vite-plugin-pwa/client"
     ],
     "paths": {
-      "~/*": ["src/*"]
+      "~/*": ["./src/*"],
+      "dockbar": ["../dockbar/src/index.ts"]
     }
   },
   "exclude": ["dist", "node_modules", "cypress"]

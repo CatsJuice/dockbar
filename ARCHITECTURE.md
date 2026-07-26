@@ -17,7 +17,7 @@ This repository is a pnpm workspace with three main concerns:
    The showcase and experimentation app. It is a Vue 3 + Vite SSG site used to demonstrate the dock in multiple visual styles and to expose live configuration controls.
 
 3. `examples/*`
-   Minimal integration samples for plain HTML, Vite + Vue, Vite + React, and Nuxt 3. These examples demonstrate how the custom elements are consumed from different runtimes.
+   Minimal integration samples for plain HTML, Vite + Vue, Vite + React, and Nuxt 4. These examples demonstrate how the custom elements are consumed from different runtimes.
 
 At the root level, the workspace also contains:
 
@@ -57,6 +57,7 @@ This means the repository follows a "headless-ish interaction engine + themed co
 The root `package.json` is both the workspace control point and the source of truth for the published package metadata:
 
 - `exports` maps the package root to `./dockbar.js` and types, and also exposes `./dist`.
+- `packageManager` pins pnpm 11.17. Use Node 24 for repository tooling and deployments; the verification matrix also runs on Node 26.
 - `scripts.dev` runs the library package in Vite dev mode.
 - `scripts.dev:playground` runs the Vue playground.
 - `scripts.build` executes `.build.mjs`.
@@ -227,7 +228,6 @@ The playground is the internal demo site and the closest thing this repository h
 - Vite
 - `vite-ssg`
 - `vite-plugin-pages`
-- `vite-plugin-vue-layouts`
 - UnoCSS
 - VueUse
 - Tweakpane
@@ -236,12 +236,13 @@ The playground is the internal demo site and the closest thing this repository h
 
 The app is clearly derived from the Vitesse starter template, and some template leftovers still exist.
 
+The playground Dockerfile installs from the canonical workspace lockfile. Build it from the repository root with `docker buildx build -f packages/playground/Dockerfile .`.
+
 ### Boot sequence
 
 `src/main.ts` uses `ViteSSG()` to create the app:
 
 - routes come from `vite-plugin-pages`
-- layouts come from `vite-plugin-vue-layouts`
 - every file under `src/modules/*.ts` is eagerly imported and its `install()` function is executed
 
 This gives the playground a modular startup model.
@@ -262,7 +263,7 @@ The route surface is small:
 - `src/pages/index.vue`: the main demo page
 - `src/pages/[...all].vue`: the fallback "not found" page
 
-`src/layouts/default.vue` is currently a pass-through layout that just renders `<RouterView />`.
+Generated routes render directly; the unused starter-template layout layer has been removed.
 
 ### Main page composition
 
@@ -338,7 +339,7 @@ Creates a more literal macOS-like icon dock using image assets from `public/maco
 
 #### `RaunoDock.vue`
 
-Loads raw SVG assets with `import.meta.glob(..., { as: 'raw' })` and recreates the cleaner pill-shaped dock inspired by Rauno's site.
+Loads raw SVG assets with Vite's current `import.meta.glob(..., { query: '?raw', import: 'default' })` form and recreates the cleaner pill-shaped dock inspired by Rauno's site.
 
 ### Supporting components
 
@@ -397,7 +398,7 @@ Shows direct use from a Vue app by importing `dockbar` and rendering native cust
 
 Shows the same idea in React JSX. There is no React wrapper component; React renders the custom elements directly.
 
-### `examples/nuxt3`
+### `examples/nuxt3` (Nuxt 4; historical directory name)
 
 Demonstrates the current SSR limitation. The page wraps the dock in `<ClientOnly>`, which matches the limitation already called out in the public README.
 
@@ -408,13 +409,14 @@ The repository combines unit scaffolding with browser-level behavior and perform
 Current coverage:
 
 - `packages/playground/test/basic.test.ts` is only a placeholder sanity test.
-- `packages/playground/test/component.test.ts` still references `../src/components/TheCounter.vue`, which does not belong to the current dock project and appears to be leftover starter-template code.
-- `tests/playwright/playground.spec.ts` exercises hover scaling, custom widths, sorting, drag previews, separator boundaries, and queued-hover cancellation against the built playground.
+- `packages/playground/test/component.test.ts` mounts a real playground component and verifies its rendered slot and normalized CSS size props.
+- `packages/playground/cypress/e2e/basic.spec.ts` smoke-tests the built UI and verifies that the Tweakpane size control updates dock items.
+- `tests/playwright/playground.spec.ts` exercises hover scaling, Tweakpane configuration, custom widths, sorting, drag previews, separator boundaries, and queued-hover cancellation against the built playground.
 - `scripts/benchmark-pointer.mjs` runs repeatable baseline/candidate hover and drag workloads in Chromium. It reports DOM operation counts, CDP layout/style/script timings, frame cadence, long tasks, long animation frames, and scale-profile correctness. Run it through `pnpm benchmark:pointer` with absolute `DOCKBAR_BASELINE_BUNDLE` and `DOCKBAR_CANDIDATE_BUNDLE` paths.
 
 Practical conclusion:
 
-- Core pointer behavior has browser regression coverage, while the older playground unit/Cypress scaffolding is still incomplete.
+- Core pointer behavior and the migrated playground configuration control have browser regression coverage.
 - Performance changes should be checked with the benchmark runner and browser tests, not inferred from source changes alone.
 
 ## Known Constraints and Implementation Gaps

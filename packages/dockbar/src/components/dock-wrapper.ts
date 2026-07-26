@@ -360,13 +360,13 @@ export class DockWrapper extends LitElement {
     return asBoolean(this.willChange)
   }
 
-  connectedCallback(): void {
+  override connectedCallback(): void {
     super.connectedCallback()
     if (this.hasUpdated)
       this.observe()
   }
 
-  disconnectedCallback(): void {
+  override disconnectedCallback(): void {
     super.disconnectedCallback()
     const dragState = this._dragState
     this.cancelDragFrame()
@@ -389,7 +389,7 @@ export class DockWrapper extends LitElement {
     window.removeEventListener('pointercancel', this.onWindowPointerUp)
   }
 
-  get className() {
+  override get className() {
     const names = ['dock-wrapper', this.position, this.direction]
     if (this._moving)
       names.push('moving')
@@ -409,7 +409,7 @@ export class DockWrapper extends LitElement {
       .join(';')
   }
 
-  render() {
+  override render() {
     return html`
       <ul class=${this.className} style="${this.wrapperStyle}">
         <slot @slotchange=${this.onSlotChange}></slot>
@@ -417,7 +417,7 @@ export class DockWrapper extends LitElement {
     `
   }
 
-  updated(changedProperties: Map<string, unknown>) {
+  override updated(changedProperties: Map<string, unknown>) {
     if (changedProperties.has('direction')) {
       this.cancelHoverFrame()
       this._mousePos = { x: 0, y: 0 }
@@ -456,7 +456,7 @@ export class DockWrapper extends LitElement {
     })
 
     items.forEach((child, index) => {
-      const childRect = itemRects[index]
+      const childRect = itemRects[index]!
       const center = this.direction === 'horizontal'
         ? childRect.left + childRect.width / 2
         : childRect.top + childRect.height / 2
@@ -811,11 +811,11 @@ export class DockWrapper extends LitElement {
     const children = this.getLayoutChildren()
     const itemIndex = children.indexOf(item)
     let startIndex = itemIndex
-    while (startIndex > 0 && !isDockSeparatorElement(children[startIndex - 1]))
+    while (startIndex > 0 && !isDockSeparatorElement(children[startIndex - 1]!))
       startIndex -= 1
 
     let endIndex = itemIndex + 1
-    while (endIndex < children.length && !isDockSeparatorElement(children[endIndex]))
+    while (endIndex < children.length && !isDockSeparatorElement(children[endIndex]!))
       endIndex += 1
 
     const nextChild = children[endIndex]
@@ -1170,7 +1170,7 @@ export class DockWrapper extends LitElement {
     dragState.item.style.top = `${rect.top}px`
   }
 
-  static styles = css`
+  static override styles = css`
     ul.dock-wrapper {
       box-sizing: border-box;
       margin: 0;

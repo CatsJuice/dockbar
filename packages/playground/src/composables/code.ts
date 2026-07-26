@@ -57,9 +57,10 @@ function tag(tagName: string, code: string | string[], attrs: Record<string, any
   const attrRaw = attrsArr.length ? ` ${attrsArr.join(' ')}` : ''
   return lines.length
     ? [
-    `<${tagName}${attrRaw}>`,
-    ...tabLines(lines),
-    `</${tagName}>`]
+        `<${tagName}${attrRaw}>`,
+        ...tabLines(lines),
+        `</${tagName}>`,
+      ]
     : [`<${tagName}${attrRaw}></${tagName}>`]
 }
 const scriptTag = (code: string | string[], attrs: Record<string, any> = {}) => tag('script', code, attrs)

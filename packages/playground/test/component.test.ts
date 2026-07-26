@@ -1,28 +1,21 @@
 import { mount } from '@vue/test-utils'
 import { describe, expect, it } from 'vitest'
-import TheCounter from '../src/components/TheCounter.vue'
+import LightBorderFrame from '../src/components/light-border-frame.vue'
 
-describe('TheCounter.vue', () => {
-  it('should render', () => {
-    const wrapper = mount(TheCounter, { props: { initial: 10 } })
-    expect(wrapper.text()).toContain('10')
-    expect(wrapper.html()).toMatchSnapshot()
-  })
+describe('light-border-frame.vue', () => {
+  it('renders its slot and normalizes size props', () => {
+    const wrapper = mount(LightBorderFrame, {
+      props: {
+        borderWidth: 2,
+        radius: 24,
+      },
+      slots: {
+        default: 'Dockbar',
+      },
+    })
 
-  it('should be interactive', async () => {
-    const wrapper = mount(TheCounter, { props: { initial: 0 } })
-    expect(wrapper.text()).toContain('0')
-
-    expect(wrapper.find('.inc').exists()).toBe(true)
-
-    expect(wrapper.find('.dec').exists()).toBe(true)
-
-    await wrapper.get('.inc').trigger('click')
-
-    expect(wrapper.text()).toContain('1')
-
-    await wrapper.get('.dec').trigger('click')
-
-    expect(wrapper.text()).toContain('0')
+    expect(wrapper.text()).toBe('Dockbar')
+    expect(wrapper.attributes('style')).toContain('--light-border-radius: 24px')
+    expect(wrapper.attributes('style')).toContain('--light-border-width: 2px')
   })
 })

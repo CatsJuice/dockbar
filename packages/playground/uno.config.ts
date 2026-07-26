@@ -3,8 +3,8 @@ import {
   presetAttributify,
   presetIcons,
   presetTypography,
-  presetUno,
   presetWebFonts,
+  presetWind3,
   transformerDirectives,
   transformerVariantGroup,
 } from 'unocss'
@@ -18,8 +18,11 @@ export default defineConfig({
     ['flex-center', 'flex items-center justify-center'],
   ],
   presets: [
-    presetUno(),
-    presetAttributify(),
+    presetWind3(),
+    presetAttributify({
+      // Dockbar's public attributes are component inputs, not utility tokens.
+      ignoreAttributes: ['gap', 'size'],
+    }),
     presetIcons({
       scale: 1.2,
       warn: true,
