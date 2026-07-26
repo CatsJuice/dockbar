@@ -113,7 +113,7 @@ Its responsibilities are:
    On `mouseleave`, it sets every child `scale` back to `1`.
 
 6. Constrain sortable drag blocks.
-   When `sortable` is enabled, `dock-separator` elements split the item list into blocks. A dragged item can only be reordered inside its original block; moving past a separator is treated as an invalid drop and snaps back. Measurements are shared between insertion, hover, and FLIP calculations where possible, and the placeholder is only moved when the insertion index changes.
+   When `sortable` is enabled, `dock-separator` elements split the item list into blocks. A dragged item can only be reordered inside its original block; moving past a separator is treated as an invalid drop and snaps back. Item providers may also opt into an isolated sort container with fixed bounds. Measurements are shared between insertion, hover, and FLIP calculations where possible, and the placeholder is only moved when the insertion index changes.
 
 7. Render layout-level styles.
    It applies CSS variables and inline styles for size, gap, padding, orientation, and overall wrapper thickness.
@@ -145,7 +145,7 @@ Important implementation details:
 Its responsibilities are:
 
 1. Render the item shell.
-   The internal DOM is a `<li>` with nested positioning and scaling wrappers around a `<slot>`.
+   The internal DOM is a `<li>` with nested positioning and scaling wrappers around the default `<slot>`, plus a named `indicator` slot in a separate non-scaling overlay layer.
 
 2. Accept layout and animation inputs.
    It exposes `size`, optional per-item `width`, `gap`, `direction`, `easing`, and `scale` as Lit-backed attributes/properties. `scale` uses a custom non-rendering accessor because the shadow DOM structure does not need to be re-rendered for every pointer frame.
@@ -163,13 +163,27 @@ The result is a two-layer animation model:
 - outer element changes the occupied layout size
 - inner element scales the slotted visual content
 
-That separation is what allows the dock to "inflate" while keeping content centered.
+The named `indicator` slot follows the outer element's footprint but stays outside the inner scale transform. That separation allows the dock to "inflate" while keeping both content centered and indicators at a fixed visual size.
 
 ### `dock-separator`: block boundary
 
 `dock-separator` is a non-scaling layout element. It renders a small separator line, receives `size` and `direction` from `dock-wrapper`, and exposes a local `thickness` property for its occupied width or height.
 
 Separators are not included in hover scale calculations or `on-sort` indexes. Their main runtime role is to split sortable docks into independent drag blocks.
+
+### Optional minimized-window add-on
+
+`dockbar/minimize` is a separate browser-only capability bundle. Importing it registers `dock-minimize-area` without adding the DOM snapshot dependency to the base Dock bundle.
+
+The add-on is split into three responsibilities:
+
+1. Snapshot capture clones a mounted source element with `modern-screenshot`, caches compatible pre-captures, and owns the canvas/blob URL until the window is restored or disposed.
+2. A document-level coordinator renders one fixed overlay canvas at a time and applies the Genie deformation for top, right, bottom, and left Dock positions.
+3. `dock-minimize-area` owns registered window handles and their generated thumbnail items. The source window remains application-owned and mounted; a default visibility adapter or a consumer-provided async adapter performs the canvas/DOM handoff.
+
+The area is a direct child of `dock-wrapper`, but its thumbnail `dock-item` elements live in the area's shadow root. A small item-provider protocol lets the wrapper include those items in hover magnification and shared configuration. When the wrapper is sortable, the area opts its thumbnails into an isolated shadow-root sort container. Provider reorders cannot cross the area boundary and remain excluded from the wrapper's `on-sort` and `on-delete` indexes and events.
+
+Minimized slots are initially added in minimize order, can then be reordered inside the area, and are removed after restore. The separator remains an explicit sibling chosen by the consumer rather than an implicit part of the area.
 
 ### Configuration model
 

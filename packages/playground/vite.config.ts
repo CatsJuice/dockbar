@@ -15,6 +15,7 @@ export default defineConfig({
   resolve: {
     alias: {
       '~/': `${path.resolve(__dirname, 'src')}/`,
+      'dockbar/minimize': path.resolve(__dirname, '../dockbar/src/minimize.ts'),
       'dockbar': path.resolve(__dirname, '../dockbar/src/index.ts'),
     },
   },

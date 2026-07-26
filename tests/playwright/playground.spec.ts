@@ -138,6 +138,11 @@ test('playground renders dock and hover expands an item', async ({ page }) => {
   await expect(page.locator('h1', { hasText: 'Dockbar' })).toBeVisible()
   await expect(page.locator('dock-wrapper')).toBeVisible()
 
+  const sidebar = page.getByTestId('home-sidebar')
+  await expect(sidebar).toHaveCSS('padding-left', '32px')
+  await expect(sidebar).toHaveCSS('padding-bottom', '0px')
+  await expect(sidebar).toHaveCSS('gap', '20px')
+
   const firstDockItem = page.locator('dock-item').first()
   await expect(firstDockItem).toBeVisible()
 
@@ -455,4 +460,563 @@ test('sortable dock deletes an item when dropped outside', async ({ page }) => {
 
   await expect(page.locator('#sortable-order')).toHaveText('2,3,4,5')
   await expect(page.locator('#sortable-deleted')).toHaveText('1')
+})
+
+test('macOS dock opens a mock window and completes a minimize-restore round trip', async ({ page }) => {
+  await page.goto('/?style=macos')
+  await waitForDockUpgrade(page, 'dock-wrapper')
+  await page.waitForFunction(() => {
+    const area = document.querySelector('dock-minimize-area')
+    return !!customElements.get('dock-minimize-area') && !!area?.shadowRoot
+  })
+
+  const mailIcon = page.locator('[data-app-id="mail"]')
+  const minimizedWindowSeparator = page.getByTestId('macos-window-separator')
+  await expect(minimizedWindowSeparator).toHaveCount(0)
+  await expect(mailIcon).toBeVisible()
+  await mailIcon.click()
+
+  const mailWindow = page.locator('[data-testid="mock-window-mail"]')
+  await expect(mailWindow).toBeVisible()
+  await expect(mailWindow.getByText('Dock motion review', { exact: true }).first()).toBeVisible()
+
+  const mailDockItem = page.locator('dock-item', { has: mailIcon })
+  const mailIndicator = page.locator('[data-running-indicator="mail"]')
+  await expect(mailIndicator).toBeVisible()
+  await page.mouse.move(20, 20)
+  await expect.poll(async () => {
+    return mailDockItem.evaluate(
+      element => (element as HTMLElement & { scale: number }).scale,
+    )
+  }).toBeCloseTo(1, 2)
+  const indicatorBoxBeforeHover = await mailIndicator.boundingBox()
+  if (!indicatorBoxBeforeHover)
+    throw new Error('Missing Mail running indicator geometry')
+
+  await mailIcon.hover()
+  await expect.poll(async () => {
+    return mailDockItem.evaluate(
+      element => (element as HTMLElement & { scale: number }).scale,
+    )
+  }).toBeGreaterThan(1.2)
+  const [indicatorBoxAfterHover, mailDockItemBox] = await Promise.all([
+    mailIndicator.boundingBox(),
+    mailDockItem.boundingBox(),
+  ])
+  if (!indicatorBoxAfterHover || !mailDockItemBox)
+    throw new Error('Missing enlarged Mail Dock geometry')
+
+  for (const indicatorBox of [indicatorBoxBeforeHover, indicatorBoxAfterHover]) {
+    expect(indicatorBox.width).toBe(4)
+    expect(indicatorBox.height).toBe(4)
+  }
+  expect(
+    Math.abs(
+      indicatorBoxAfterHover.x + indicatorBoxAfterHover.width / 2
+      - (mailDockItemBox.x + mailDockItemBox.width / 2),
+    ),
+  ).toBeLessThanOrEqual(1)
+
+  const trafficLights = mailWindow.locator('.traffic-lights')
+  await trafficLights.hover()
+  const trafficLightIconMetrics = await trafficLights.locator('.traffic-light-symbol')
+    .evaluateAll(elements => elements.map((element) => {
+      const icon = element as SVGElement
+      const button = icon.closest('.traffic-light')
+      if (!button)
+        throw new Error('Missing traffic-light button')
+
+      const buttonRect = button.getBoundingClientRect()
+      const iconRect = icon.getBoundingClientRect()
+      const style = getComputedStyle(icon)
+      return {
+        centerXDelta: Math.abs(
+          iconRect.left + iconRect.width / 2
+          - (buttonRect.left + buttonRect.width / 2),
+        ),
+        centerYDelta: Math.abs(
+          iconRect.top + iconRect.height / 2
+          - (buttonRect.top + buttonRect.height / 2),
+        ),
+        height: iconRect.height,
+        opacity: Number.parseFloat(style.opacity),
+        strokeWidth: Number.parseFloat(style.strokeWidth),
+        width: iconRect.width,
+      }
+    }))
+  expect(trafficLightIconMetrics).toHaveLength(3)
+  for (const metric of trafficLightIconMetrics) {
+    expect(metric.width).toBe(8)
+    expect(metric.height).toBe(8)
+    expect(metric.centerXDelta).toBeLessThanOrEqual(0.1)
+    expect(metric.centerYDelta).toBeLessThanOrEqual(0.1)
+    expect(metric.strokeWidth).toBe(1.25)
+    expect(metric.opacity).toBe(0.72)
+  }
+
+  const windowBeforeDrag = await mailWindow.boundingBox()
+  const titlebar = mailWindow.locator('.titlebar')
+  const titlebarBox = await titlebar.boundingBox()
+  if (!windowBeforeDrag || !titlebarBox)
+    throw new Error('Missing Mail window geometry')
+
+  const dragStart = {
+    x: titlebarBox.x + titlebarBox.width * 0.55,
+    y: titlebarBox.y + titlebarBox.height / 2,
+  }
+  await page.mouse.move(dragStart.x, dragStart.y)
+  await page.mouse.down()
+  await page.mouse.move(dragStart.x + 72, dragStart.y + 34, { steps: 12 })
+  await page.mouse.up()
+
+  await expect.poll(async () => {
+    const current = await mailWindow.boundingBox()
+    return current ? Math.round(current.x - windowBeforeDrag.x) : 0
+  }).toBeGreaterThan(40)
+
+  const minimizeButton = mailWindow.getByRole('button', { name: 'Minimize window' })
+  await minimizeButton.hover()
+  await minimizeButton.focus()
+  await minimizeButton.press('Enter')
+
+  await expect(mailIcon).toHaveAttribute('data-window-state', 'minimized')
+  await expect(mailWindow).toBeHidden()
+  await expect(minimizedWindowSeparator).toHaveCount(1)
+  await expect(page.locator('dock-minimize-area dock-item[data-dock-minimized-window="mail"]')).toHaveCount(1)
+  await expect(page.locator('[data-dock-genie-overlay]')).toHaveCount(0)
+  const restoreButton = page.getByRole('button', { name: 'Restore Mail' })
+  await expect(restoreButton).toBeFocused()
+  await expect(restoreButton).toHaveCSS('cursor', 'default')
+
+  const minimizedItem = page.locator(
+    'dock-minimize-area dock-item[data-dock-minimized-window="mail"]',
+  )
+  const minimizedThumbnail = minimizedItem.locator('[part="thumbnail"]')
+  await expect(minimizedItem).toHaveCSS('cursor', 'default')
+  await expect(minimizedThumbnail).toHaveCSS('cursor', 'default')
+  const regularItem = page.locator('dock-wrapper > dock-item').first()
+  const [minimizedItemBox, minimizedThumbnailBox, regularItemBox] = await Promise.all([
+    minimizedItem.boundingBox(),
+    minimizedThumbnail.boundingBox(),
+    regularItem.boundingBox(),
+  ])
+  if (!minimizedItemBox || !minimizedThumbnailBox || !regularItemBox)
+    throw new Error('Missing Dock item geometry')
+
+  expect(Math.abs(minimizedItemBox.height - regularItemBox.height))
+    .toBeLessThanOrEqual(1)
+  expect(
+    Math.abs(
+      minimizedThumbnailBox.y + minimizedThumbnailBox.height / 2
+      - (regularItemBox.y + regularItemBox.height / 2),
+    ),
+  ).toBeLessThanOrEqual(1)
+
+  const scaleBeforeHover = await minimizedItem.evaluate(
+    element => (element as HTMLElement & { scale: number }).scale,
+  )
+  await minimizedItem.hover()
+  await expect.poll(async () => {
+    return minimizedItem.evaluate(
+      element => (element as HTMLElement & { scale: number }).scale,
+    )
+  }).toBeGreaterThan(scaleBeforeHover)
+
+  await restoreButton.press('Enter')
+
+  await expect(mailIcon).toHaveAttribute('data-window-state', 'idle')
+  await expect(mailWindow).toBeVisible()
+  await expect(minimizedWindowSeparator).toHaveCount(0)
+  await expect(minimizeButton).toBeFocused()
+  await expect(page.locator('dock-minimize-area dock-item[data-dock-minimized-window="mail"]')).toHaveCount(0)
+  await expect(page.locator('[data-dock-genie-overlay]')).toHaveCount(0)
+  await expect(mailWindow).not.toHaveAttribute('aria-hidden', 'true')
+  await expect(mailWindow).not.toHaveAttribute('inert', '')
+  await expect.poll(async () => {
+    return mailWindow.evaluate(element => ({
+      pointerEvents: (element as HTMLElement).style.pointerEvents,
+      visibility: (element as HTMLElement).style.visibility,
+    }))
+  }).toEqual({
+    pointerEvents: '',
+    visibility: '',
+  })
+})
+
+test('all macOS dock icons open their own closable mock window', async ({ page }) => {
+  const appIds = [
+    'files',
+    'app-store',
+    'freeform',
+    'keynote',
+    'mail',
+    'messages',
+    'mindfulness',
+    'music',
+    'tv',
+    'lofi',
+    'appearance',
+  ]
+
+  await page.goto('/?style=macos')
+  await waitForDockUpgrade(page, 'dock-wrapper')
+  await page.waitForFunction(() => !!customElements.get('dock-minimize-area'))
+  await expect(page.locator('[data-app-id]')).toHaveCount(appIds.length)
+
+  for (const appId of appIds) {
+    await page.locator(`[data-app-id="${appId}"]`).click()
+    const mockWindow = page.locator(`[data-testid="mock-window-${appId}"]`)
+    await expect(mockWindow).toBeVisible()
+    await mockWindow.getByRole('button', { name: 'Close window' }).click()
+    await expect(mockWindow).toHaveCount(0)
+  }
+})
+
+test('macOS minimized thumbnails can be sorted within their own area', async ({ page }) => {
+  await page.goto('/?style=macos')
+  await waitForDockUpgrade(page, 'dock-wrapper')
+  await page.waitForFunction(() => {
+    const area = document.querySelector('dock-minimize-area')
+    return !!customElements.get('dock-minimize-area') && !!area?.shadowRoot
+  })
+
+  await page.locator('dock-wrapper').evaluate((element) => {
+    element.setAttribute('sortable', 'true')
+    element.setAttribute('max-scale', '1')
+    element.addEventListener('on-sort', () => {
+      const dock = element as HTMLElement
+      dock.dataset.providerSortEvents = String(
+        Number(dock.dataset.providerSortEvents ?? 0) + 1,
+      )
+    })
+  })
+
+  const appIds = ['mail', 'messages', 'music']
+  for (const appId of appIds) {
+    await page.locator(`[data-app-id="${appId}"]`).click()
+    const mockWindow = page.locator(`[data-testid="mock-window-${appId}"]`)
+    await expect(mockWindow).toBeVisible()
+    await mockWindow.getByRole('button', { name: 'Minimize window' }).click()
+    await expect(page.locator(`[data-app-id="${appId}"]`))
+      .toHaveAttribute('data-window-state', 'minimized')
+    await expect(mockWindow).toBeHidden()
+  }
+
+  const thumbnails = page.locator(
+    'dock-minimize-area dock-item[data-dock-minimized-window]',
+  )
+  await expect(thumbnails).toHaveCount(3)
+  await expect.poll(async () => {
+    return thumbnails.evaluateAll(items => items.map(
+      item => item.getAttribute('data-dock-minimized-window'),
+    ))
+  }).toEqual(appIds)
+
+  const lastBox = await thumbnails.last().boundingBox()
+  if (!lastBox)
+    throw new Error('Missing minimized thumbnail geometry')
+
+  await dragLocatorTo(
+    page,
+    'dock-minimize-area dock-item[data-dock-minimized-window="mail"]',
+    {
+      x: lastBox.x + lastBox.width * 0.75,
+      y: lastBox.y + lastBox.height / 2,
+    },
+  )
+
+  await expect.poll(async () => {
+    return thumbnails.evaluateAll(items => items.map(
+      item => item.getAttribute('data-dock-minimized-window'),
+    ))
+  }).toEqual(['messages', 'music', 'mail'])
+  await expect(page.locator('dock-wrapper')).not.toHaveAttribute('data-provider-sort-events')
+
+  for (const appId of appIds) {
+    await expect(page.locator(`[data-testid="mock-window-${appId}"]`)).toBeHidden()
+    await expect(page.locator(`[data-app-id="${appId}"]`))
+      .toHaveAttribute('data-window-state', 'minimized')
+  }
+})
+
+test('dock minimize keeps animating with an asynchronous visibility adapter', async ({ page }) => {
+  await page.goto('/?style=macos')
+  await waitForDockUpgrade(page, 'dock-wrapper')
+  await page.waitForFunction(() => !!customElements.get('dock-minimize-area'))
+
+  await page.evaluate(() => {
+    const source = document.createElement('section')
+    source.id = 'async-visibility-window'
+    source.textContent = 'Asynchronous visibility adapter'
+    Object.assign(source.style, {
+      alignItems: 'center',
+      background: 'linear-gradient(135deg, #60a5fa, #7c3aed)',
+      borderRadius: '18px',
+      color: 'white',
+      display: 'flex',
+      font: '600 20px system-ui',
+      height: '180px',
+      justifyContent: 'center',
+      left: '120px',
+      position: 'fixed',
+      top: '100px',
+      width: '320px',
+      zIndex: '100',
+    })
+    document.body.appendChild(source)
+
+    const area = document.querySelector('dock-minimize-area') as HTMLElement & {
+      registerWindow: (options: {
+        id: string
+        label: string
+        source: HTMLElement
+        visibility: {
+          setHidden: (hidden: boolean) => Promise<void>
+        }
+      }) => {
+        minimize: () => Promise<void>
+        state: string
+      }
+    }
+    const handle = area.registerWindow({
+      id: 'async-visibility',
+      label: 'Async visibility',
+      source,
+      visibility: {
+        setHidden: async (hidden) => {
+          await new Promise(resolve => window.setTimeout(resolve, 80))
+          source.style.visibility = hidden ? 'hidden' : ''
+          source.style.pointerEvents = hidden ? 'none' : ''
+        },
+      },
+    })
+    void handle.minimize().catch((error: unknown) => {
+      source.dataset.error = String(error)
+    })
+  })
+
+  await expect(page.locator('[data-dock-genie-overlay]')).toHaveCount(1)
+  await expect.poll(async () => {
+    return page.locator('dock-minimize-area').evaluate((element) => {
+      const area = element as HTMLElement & {
+        getWindow: (id: string) => { state: string } | undefined
+      }
+      return area.getWindow('async-visibility')?.state
+    })
+  }).toBe('minimized')
+  await expect(page.locator('#async-visibility-window')).toBeHidden()
+  await expect(page.locator('#async-visibility-window')).not.toHaveAttribute('data-error')
+
+  await page.locator('dock-minimize-area').evaluate(async (element) => {
+    const area = element as HTMLElement & {
+      restore: (id: string) => Promise<void>
+    }
+    await area.restore('async-visibility')
+  })
+
+  await expect(page.locator('#async-visibility-window')).toBeVisible()
+  await expect(page.locator('[data-dock-genie-overlay]')).toHaveCount(0)
+  await page.locator('dock-minimize-area').evaluate(async (element) => {
+    const area = element as HTMLElement & {
+      unregisterWindow: (id: string) => Promise<boolean>
+    }
+    await area.unregisterWindow('async-visibility')
+  })
+  await page.locator('#async-visibility-window').evaluate(element => element.remove())
+})
+
+test('genie animation renders and restores from every dock position', async ({ page }) => {
+  const positions = ['top', 'right', 'bottom', 'left'] as const
+
+  await page.goto('/?style=macos')
+  await waitForDockUpgrade(page, 'dock-wrapper')
+  await page.waitForFunction(() => !!customElements.get('dock-minimize-area'))
+
+  for (const position of positions) {
+    const sourceCenter = await page.evaluate((dockPosition) => {
+      document.querySelector('#position-fixture')?.remove()
+      document.querySelector('#position-source')?.remove()
+
+      const fixture = document.createElement('div')
+      fixture.id = 'position-fixture'
+      Object.assign(fixture.style, {
+        position: 'fixed',
+        zIndex: '4000',
+      })
+      const edgeStyles: Record<typeof dockPosition, Partial<CSSStyleDeclaration>> = {
+        bottom: {
+          bottom: '18px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+        },
+        left: {
+          left: '18px',
+          top: '50%',
+          transform: 'translateY(-50%)',
+        },
+        right: {
+          right: '18px',
+          top: '50%',
+          transform: 'translateY(-50%)',
+        },
+        top: {
+          left: '50%',
+          top: '18px',
+          transform: 'translateX(-50%)',
+        },
+      }
+      Object.assign(fixture.style, edgeStyles[dockPosition])
+
+      const dock = document.createElement('dock-wrapper')
+      dock.setAttribute('position', dockPosition)
+      dock.setAttribute(
+        'direction',
+        dockPosition === 'top' || dockPosition === 'bottom' ? 'horizontal' : 'vertical',
+      )
+      dock.setAttribute('gap', '8')
+      dock.setAttribute('max-scale', '1')
+      dock.setAttribute('padding', '8')
+      dock.setAttribute('size', '48')
+      Object.assign(dock.style, {
+        background: 'rgba(30, 41, 59, 0.78)',
+        borderRadius: '14px',
+      })
+
+      const anchor = document.createElement('dock-item')
+      const anchorContent = document.createElement('span')
+      Object.assign(anchorContent.style, {
+        background: '#f8fafc',
+        borderRadius: '10px',
+        display: 'block',
+      })
+      anchor.appendChild(anchorContent)
+      const separator = document.createElement('dock-separator')
+      const area = document.createElement('dock-minimize-area')
+      area.id = 'position-area'
+      dock.append(anchor, separator, area)
+      fixture.appendChild(dock)
+
+      const source = document.createElement('section')
+      source.id = 'position-source'
+      source.textContent = `${dockPosition} Genie`
+      Object.assign(source.style, {
+        alignItems: 'center',
+        background: 'linear-gradient(135deg, #fb7185, #7c3aed)',
+        borderRadius: '20px',
+        color: 'white',
+        display: 'flex',
+        font: '700 22px system-ui',
+        height: '160px',
+        justifyContent: 'center',
+        left: 'calc(50% - 140px)',
+        position: 'fixed',
+        top: 'calc(50% - 80px)',
+        width: '280px',
+        zIndex: '3000',
+      })
+      document.body.append(fixture, source)
+
+      const typedArea = area as HTMLElement & {
+        registerWindow: (options: {
+          id: string
+          label: string
+          source: HTMLElement
+        }) => {
+          minimize: () => Promise<void>
+        }
+      }
+      const handle = typedArea.registerWindow({
+        id: `position-${dockPosition}`,
+        label: `${dockPosition} window`,
+        source,
+      })
+      void handle.minimize().catch((error: unknown) => {
+        source.dataset.error = String(error)
+      })
+
+      const rect = source.getBoundingClientRect()
+      return {
+        x: Math.round(rect.left + rect.width / 2),
+        y: Math.round(rect.top + rect.height / 2),
+      }
+    }, position)
+
+    const overlay = page.locator('[data-dock-genie-overlay]')
+    await expect(overlay).toHaveCount(1)
+    await expect.poll(async () => {
+      return overlay.evaluate((element, point) => {
+        const canvas = element as HTMLCanvasElement
+        const context = canvas.getContext('2d')
+        if (!context)
+          return 0
+
+        const scaleX = canvas.width / window.innerWidth
+        const scaleY = canvas.height / window.innerHeight
+        return context.getImageData(
+          Math.min(canvas.width - 1, Math.round(point.x * scaleX)),
+          Math.min(canvas.height - 1, Math.round(point.y * scaleY)),
+          1,
+          1,
+        ).data[3]
+      }, sourceCenter)
+    }).toBeGreaterThan(0)
+
+    await expect.poll(async () => {
+      return page.locator('#position-area').evaluate((element, id) => {
+        const area = element as HTMLElement & {
+          getWindow: (windowId: string) => { state: string } | undefined
+        }
+        return area.getWindow(id)?.state
+      }, `position-${position}`)
+    }).toBe('minimized')
+    await expect(page.locator('#position-source')).toBeHidden()
+    await expect(page.locator('#position-source')).not.toHaveAttribute('data-error')
+
+    const alignment = await page.locator('#position-fixture').evaluate(
+      (fixture, dockPosition) => {
+        const anchor = fixture.querySelector('dock-item')
+        const area = fixture.querySelector('dock-minimize-area')
+        const minimizedItem = area?.shadowRoot?.querySelector('dock-item')
+        const thumbnail = minimizedItem?.querySelector('[part="thumbnail"]')
+        if (!anchor || !minimizedItem || !thumbnail)
+          throw new Error('Missing position fixture Dock geometry')
+
+        const anchorRect = anchor.getBoundingClientRect()
+        const minimizedItemRect = minimizedItem.getBoundingClientRect()
+        const thumbnailRect = thumbnail.getBoundingClientRect()
+        const horizontal = dockPosition === 'top' || dockPosition === 'bottom'
+        return {
+          centerDelta: horizontal
+            ? Math.abs(
+                thumbnailRect.top + thumbnailRect.height / 2
+                - (anchorRect.top + anchorRect.height / 2),
+              )
+            : Math.abs(
+                thumbnailRect.left + thumbnailRect.width / 2
+                - (anchorRect.left + anchorRect.width / 2),
+              ),
+          footprintDelta: horizontal
+            ? Math.abs(minimizedItemRect.height - anchorRect.height)
+            : Math.abs(minimizedItemRect.width - anchorRect.width),
+        }
+      },
+      position,
+    )
+    expect(alignment.centerDelta).toBeLessThanOrEqual(1)
+    expect(alignment.footprintDelta).toBeLessThanOrEqual(1)
+
+    await page.locator('#position-area').evaluate(async (element, id) => {
+      const area = element as HTMLElement & {
+        restore: (windowId: string) => Promise<void>
+        unregisterWindow: (windowId: string) => Promise<boolean>
+      }
+      await area.restore(id)
+      await area.unregisterWindow(id)
+    }, `position-${position}`)
+    await expect(page.locator('#position-source')).toBeVisible()
+    await expect(overlay).toHaveCount(0)
+  }
+
+  await page.locator('#position-fixture').evaluate(element => element.remove())
+  await page.locator('#position-source').evaluate(element => element.remove())
 })

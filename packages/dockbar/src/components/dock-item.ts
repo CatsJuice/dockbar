@@ -17,6 +17,9 @@ export class DockItem extends LitElement {
   @property({ type: Number })
   width?: number
 
+  @property({ type: Number })
+  height?: number
+
   @property({ type: String })
   easing = 'linear'
 
@@ -47,10 +50,16 @@ export class DockItem extends LitElement {
       : this.size
   }
 
+  get heightValue() {
+    return typeof this.height === 'number' && Number.isFinite(this.height) && this.height > 0
+      ? this.height
+      : this.size
+  }
+
   get sizeStyle() {
     const styleObj = {
       width: `${this.widthValue}px`,
-      height: `${this.size}px`,
+      height: `${this.heightValue}px`,
     }
     return Object.entries(styleObj).reduce((acc, [key, value]) => {
       acc += `${key}: ${value};`
@@ -78,6 +87,9 @@ export class DockItem extends LitElement {
             <slot></slot>
           </div>
         </div>
+        <div class="dock-item__indicator" part="indicator">
+          <slot name="indicator"></slot>
+        </div>
       </li>
     `
   }
@@ -88,7 +100,11 @@ export class DockItem extends LitElement {
   }
 
   override updated(changedProperties: Map<string, unknown>) {
-    if (changedProperties.has('size') || changedProperties.has('width'))
+    if (
+      changedProperties.has('size')
+      || changedProperties.has('width')
+      || changedProperties.has('height')
+    )
       this.onScaleChanged(this.scale)
   }
 
@@ -109,7 +125,7 @@ export class DockItem extends LitElement {
   }
 
   get previewSizeStyle() {
-    return `width: ${this.widthValue * this.scale}px;height: ${this.size * this.scale}px;`
+    return `width: ${this.widthValue * this.scale}px;height: ${this.heightValue * this.scale}px;`
   }
 
   onScaleChanged(scale: number) {
@@ -130,7 +146,7 @@ export class DockItem extends LitElement {
         onRender: () => {
           const animatedScale = this._animatedScale.value
           sizeEl.style.width = `${this.widthValue * animatedScale}px`
-          sizeEl.style.height = `${this.size * animatedScale}px`
+          sizeEl.style.height = `${this.heightValue * animatedScale}px`
           scaleEl.style.transform = `scale(${animatedScale})`
         },
       } as unknown as AnimatableParams
@@ -193,6 +209,11 @@ export class DockItem extends LitElement {
       display: flex;
       justify-content: center;
       align-items: center;
+    }
+    .dock-item__indicator {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
     }
     .dock-item__scale > ::slotted(*) {
       width: 100%;

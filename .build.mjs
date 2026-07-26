@@ -111,8 +111,10 @@ async function publish() {
 }
 
 async function outputSize() {
-  const raw = await readFile(resolve(rootDir, 'dist/dockbar.js'), 'utf8')
-  console.log(`Brotli size: ${prettyBytes(brotliSize.sync(raw))}`)
+  for (const fileName of ['dockbar.js', 'dockbar.minimize.js']) {
+    const raw = await readFile(resolve(rootDir, 'dist', fileName), 'utf8')
+    console.log(`${fileName} Brotli size: ${prettyBytes(brotliSize.sync(raw))}`)
+  }
 }
 
 if (isPublishing)

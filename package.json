@@ -17,6 +17,10 @@
       "types": "./types/index.d.ts",
       "import": "./dockbar.js"
     },
+    "./minimize": {
+      "types": "./types/minimize.d.ts",
+      "import": "./dockbar.minimize.js"
+    },
     "./dist": {
       "types": "./dist/types/index.d.ts",
       "import": "./dist/dockbar.js"

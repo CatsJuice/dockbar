@@ -25,7 +25,8 @@
     ],
     "paths": {
       "~/*": ["./src/*"],
-      "dockbar": ["../dockbar/src/index.ts"]
+      "dockbar": ["../dockbar/src/index.ts"],
+      "dockbar/minimize": ["../dockbar/src/minimize.ts"]
     }
   },
   "exclude": ["dist", "node_modules", "cypress"]

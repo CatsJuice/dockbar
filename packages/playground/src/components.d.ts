@@ -19,6 +19,7 @@ declare module 'vue' {
     LightBorderFrame: typeof import('./components/light-border-frame.vue')['default']
     LofiIcon: typeof import('./components/Dock/LofiIcon.vue')['default']
     MacosDock: typeof import('./components/Dock/MacosDock.vue')['default']
+    MacosMockApp: typeof import('./components/macos-mock-app.vue')['default']
     MacosWindow: typeof import('./components/macos-window.vue')['default']
     MagicCard: typeof import('./components/MagicCard/index.vue')['default']
     MusicAnim: typeof import('./components/Dock/MusicAnim.vue')['default']

@@ -19,9 +19,18 @@ export interface DockDeleteDetail {
 }
 
 interface DockBlock {
+  container: HTMLElement
   items: DockItem[]
   nextSeparator: DockSeparator | null
   previousSeparator: DockSeparator | null
+  provider: DockItemProvider | null
+}
+
+interface DockItemProvider extends HTMLElement {
+  readonly dockItemSortContainer?: HTMLElement | null
+  readonly dockItems: DockItem[]
+  readonly dockItemsSortable?: boolean
+  prepareDockItemDragPreview?: (item: DockItem, preview: DockItem) => void
 }
 
 type DockLayoutChild = DockItem | DockSeparator
@@ -30,6 +39,7 @@ interface DragState {
   active: boolean
   block: DockBlock
   currentIndex: number
+  fixedBounds: DragBlockBounds | null
   invalid: boolean
   item: DockItem
   originBlockIndex: number
@@ -137,10 +147,16 @@ function isDockLayoutChild(node: Element): node is DockLayoutChild {
   return isDockItemElement(node) || isDockSeparatorElement(node)
 }
 
+function isDockItemProviderElement(node: Element): node is DockItemProvider {
+  return node.nodeName.toUpperCase() === 'DOCK-MINIMIZE-AREA'
+}
+
 @customElement('dock-wrapper')
 export class DockWrapper extends LitElement {
   private _children: DockItem[] = []
+  private _itemProviders: DockItemProvider[] = []
   private _layoutChildren: DockLayoutChild[] = []
+  private readonly _providerItems = new Map<DockItemProvider, DockItem[]>()
   private _dragFrame: number | null = null
   private _dragState: DragState | null = null
   private _hoverFrame: number | null = null
@@ -176,6 +192,18 @@ export class DockWrapper extends LitElement {
     this.queueHoverScale(e.clientX, e.clientY)
   }
 
+  private readonly onDockItemsChange = (e: Event) => {
+    const provider = e.composedPath().find((node): node is DockItemProvider => {
+      return node instanceof Element && isDockItemProviderElement(node)
+    })
+    if (!provider || provider.parentElement !== this || !this._itemProviders.includes(provider))
+      return
+
+    this.syncProviderItems(provider)
+    this.onWillChangeChanged(this.willChangeValue)
+    this.provideSharedProps()
+  }
+
   private readonly onHostPointerDown = (e: PointerEvent) => {
     if (this._dragState || !this.sortableValue || this.disabledValue || e.button !== 0)
       return
@@ -184,21 +212,30 @@ export class DockWrapper extends LitElement {
     if (!item)
       return
 
+    const block = this.getDockBlockForItem(item)
+    if (!block)
+      return
+
     const originRect = item.getBoundingClientRect()
     const items = this.getDockItems()
-    const block = this.getDockBlockForItem(item)
     const originBlockIndex = block.items.indexOf(item)
     if (originBlockIndex < 0)
       return
 
+    const originIndex = block.provider
+      ? originBlockIndex
+      : items.indexOf(item)
     this._dragState = {
       active: false,
       block,
       currentIndex: originBlockIndex,
+      fixedBounds: block.provider
+        ? this.getProviderDragBounds(block, this.getBoundingClientRect())
+        : null,
       invalid: false,
       item,
       originBlockIndex,
-      originIndex: items.indexOf(item),
+      originIndex,
       originRect,
       outside: false,
       placeholder: this.createPlaceholder(originRect),
@@ -273,7 +310,7 @@ export class DockWrapper extends LitElement {
     }
 
     if (dragState.outside) {
-      if (this.allowDragDeleteValue)
+      if (!dragState.block.provider && this.allowDragDeleteValue)
         this.finishDelete(dragState)
       else
         this.cancelDrag(dragState)
@@ -362,8 +399,12 @@ export class DockWrapper extends LitElement {
 
   override connectedCallback(): void {
     super.connectedCallback()
-    if (this.hasUpdated)
+    if (this.hasUpdated) {
+      this.syncChildren()
       this.observe()
+      this.onWillChangeChanged(this.willChangeValue)
+      this.provideSharedProps()
+    }
   }
 
   override disconnectedCallback(): void {
@@ -379,7 +420,11 @@ export class DockWrapper extends LitElement {
     this._moving = false
     this._suppressClick = false
     this._ready = false
+    this.cleanupDockItems(this.getProviderDockItems())
+    this._itemProviders = []
+    this._providerItems.clear()
     this.shadowRoot?.host?.removeEventListener('click', this.onHostClick as EventListener, true)
+    this.shadowRoot?.host?.removeEventListener('dock-items-change', this.onDockItemsChange)
     this.shadowRoot?.host?.removeEventListener('dragstart', this.onHostDragStart as EventListener)
     this.shadowRoot?.host?.removeEventListener('mouseleave', this.onHostMouseleave as EventListener)
     this.shadowRoot?.host?.removeEventListener('mousemove', this.onHostMousemove as EventListener)
@@ -428,7 +473,10 @@ export class DockWrapper extends LitElement {
     }
     if (changedProperties.has('willChange'))
       this.onWillChangeChanged(this.willChangeValue)
-    if (['size', 'gap', 'easing', 'direction'].some(key => changedProperties.has(key)))
+    if (
+      ['size', 'gap', 'easing', 'direction', 'position', 'sortable']
+        .some(key => changedProperties.has(key))
+    )
       this.provideSharedProps()
   }
 
@@ -462,7 +510,7 @@ export class DockWrapper extends LitElement {
         : childRect.top + childRect.height / 2
       const itemSize = this.direction === 'horizontal'
         ? child.widthValue
-        : child.size
+        : child.heightValue
       const scale = calculateHoverScale(
         pointerPosition,
         center,
@@ -610,16 +658,17 @@ export class DockWrapper extends LitElement {
     dragState.currentIndex = dragState.originBlockIndex
     this._moving = true
 
-    this.insertBefore(dragState.placeholder, dragState.item)
+    dragState.block.container.insertBefore(dragState.placeholder, dragState.item)
     this.prepareDraggedItem(dragState)
     dragState.preview = this.createDragPreview(dragState, clientX, clientY)
   }
 
   private cancelDrag(dragState: DragState) {
-    const beforeRects = this.measureLayout(this.getVisibleLayoutChildren())
+    const layoutChildren = this.getVisibleDragLayoutChildren(dragState)
+    const beforeRects = this.measureLayout(layoutChildren)
     this.movePlaceholder(dragState.originBlockIndex, false)
     const targetRect = dragState.placeholder.getBoundingClientRect()
-    this.animateLayout(this.getVisibleLayoutChildren(), beforeRects)
+    this.animateLayout(layoutChildren, beforeRects)
     this.updateDraggedItemPosition(dragState, targetRect)
     this.animateDragPreviewTo(dragState, targetRect, {
       onComplete: () => this.restoreDraggedItem(dragState, dragState.originBlockIndex),
@@ -667,11 +716,18 @@ export class DockWrapper extends LitElement {
     preview.direction = dragState.item.direction
     preview.easing = dragState.item.easing
     preview.gap = dragState.item.gap
+    preview.height = dragState.item.height
     preview.scale = dragState.item.scale
     preview.size = dragState.item.size
     preview.width = dragState.item.width
     preview.setAttribute('aria-hidden', 'true')
     preview.setAttribute('data-dock-preview', '')
+    try {
+      dragState.block.provider?.prepareDockItemDragPreview?.(dragState.item, preview)
+    }
+    catch {
+      // Provider preview styling is optional; dragging still works without it.
+    }
     this.disablePreviewAnimations(preview)
 
     const previewPosition = this.getDragPreviewPosition(dragState, clientX, clientY)
@@ -799,6 +855,17 @@ export class DockWrapper extends LitElement {
     return this._children
   }
 
+  private getManagedDockItems() {
+    return Array.from(new Set([
+      ...this.getDockItems(),
+      ...this.getProviderDockItems(),
+    ]))
+  }
+
+  private getProviderDockItems() {
+    return this._itemProviders.flatMap(provider => this._providerItems.get(provider) ?? [])
+  }
+
   private getDockSeparators() {
     return this._layoutChildren.filter(isDockSeparatorElement)
   }
@@ -807,9 +874,30 @@ export class DockWrapper extends LitElement {
     return this._layoutChildren
   }
 
-  private getDockBlockForItem(item: DockItem): DockBlock {
+  private getDockBlockForItem(item: DockItem): DockBlock | null {
+    const provider = this._itemProviders.find((candidate) => {
+      return candidate.dockItemsSortable === true
+        && (this._providerItems.get(candidate) ?? []).includes(item)
+    })
+    if (provider) {
+      const container = provider.dockItemSortContainer
+      if (!container || item.parentElement !== container)
+        return null
+
+      return {
+        container,
+        items: this._providerItems.get(provider) ?? [],
+        nextSeparator: null,
+        previousSeparator: null,
+        provider,
+      }
+    }
+
     const children = this.getLayoutChildren()
     const itemIndex = children.indexOf(item)
+    if (itemIndex < 0)
+      return null
+
     let startIndex = itemIndex
     while (startIndex > 0 && !isDockSeparatorElement(children[startIndex - 1]!))
       startIndex -= 1
@@ -821,13 +909,18 @@ export class DockWrapper extends LitElement {
     const nextChild = children[endIndex]
     const previousChild = children[startIndex - 1]
     return {
+      container: this,
       items: children.slice(startIndex, endIndex).filter(isDockItemElement),
       nextSeparator: nextChild && isDockSeparatorElement(nextChild) ? nextChild : null,
       previousSeparator: previousChild && isDockSeparatorElement(previousChild) ? previousChild : null,
+      provider: null,
     }
   }
 
   private getDragBlockBounds(dragState: DragState, dockRect: DOMRect): DragBlockBounds {
+    if (dragState.fixedBounds)
+      return dragState.fixedBounds
+
     const previousRect = dragState.block.previousSeparator?.getBoundingClientRect()
     const nextRect = dragState.block.nextSeparator?.getBoundingClientRect()
 
@@ -840,6 +933,30 @@ export class DockWrapper extends LitElement {
           max: nextRect?.top ?? dockRect.bottom,
           min: previousRect?.bottom ?? dockRect.top,
         }
+  }
+
+  private getProviderDragBounds(block: DockBlock, dockRect: DOMRect): DragBlockBounds {
+    const visibleRects = block.items
+      .filter(item => item.style.display !== 'none')
+      .map(item => item.getBoundingClientRect())
+    if (!visibleRects.length) {
+      return this.direction === 'horizontal'
+        ? { max: dockRect.right, min: dockRect.left }
+        : { max: dockRect.bottom, min: dockRect.top }
+    }
+
+    const inset = this.gapValue / 2
+    if (this.direction === 'horizontal') {
+      return {
+        max: Math.min(dockRect.right, Math.max(...visibleRects.map(rect => rect.right)) + inset),
+        min: Math.max(dockRect.left, Math.min(...visibleRects.map(rect => rect.left)) - inset),
+      }
+    }
+
+    return {
+      max: Math.min(dockRect.bottom, Math.max(...visibleRects.map(rect => rect.bottom)) + inset),
+      min: Math.max(dockRect.top, Math.min(...visibleRects.map(rect => rect.top)) - inset),
+    }
   }
 
   private getDragPreviewPosition(dragState: DragState, clientX: number, clientY: number): DragPreviewPosition {
@@ -911,7 +1028,9 @@ export class DockWrapper extends LitElement {
 
   private getVisibleDockItems() {
     const draggedItem = this._dragState?.item
-    return this.getDockItems().filter(item => item !== draggedItem && item.style.display !== 'none')
+    return this.getManagedDockItems().filter(
+      item => item !== draggedItem && item.style.display !== 'none',
+    )
   }
 
   private getVisibleBlockItems(dragState: DragState) {
@@ -921,6 +1040,12 @@ export class DockWrapper extends LitElement {
   private getVisibleLayoutChildren() {
     const draggedItem = this._dragState?.item
     return this.getLayoutChildren().filter(child => child !== draggedItem && child.style.display !== 'none')
+  }
+
+  private getVisibleDragLayoutChildren(dragState: DragState) {
+    return dragState.block.provider
+      ? this.getVisibleBlockItems(dragState)
+      : this.getVisibleLayoutChildren()
   }
 
   private handleDragInside(clientX: number, clientY: number) {
@@ -947,7 +1072,7 @@ export class DockWrapper extends LitElement {
       return
     }
 
-    const layoutChildren = this.getVisibleLayoutChildren()
+    const layoutChildren = this.getVisibleDragLayoutChildren(dragState)
     const beforeRects = this.measureLayout(layoutChildren, itemRects)
     dragState.invalid = false
     dragState.outside = false
@@ -962,11 +1087,12 @@ export class DockWrapper extends LitElement {
     if (!dragState || dragState.outside)
       return
 
-    const beforeRects = this.measureLayout(this.getVisibleLayoutChildren())
+    const layoutChildren = this.getVisibleDragLayoutChildren(dragState)
+    const beforeRects = this.measureLayout(layoutChildren)
     dragState.invalid = false
     dragState.outside = true
     this.movePlaceholder(dragState.currentIndex, true)
-    this.animateLayout(this.getVisibleLayoutChildren(), beforeRects)
+    this.animateLayout(layoutChildren, beforeRects)
     this.resetAll()
   }
 
@@ -975,11 +1101,12 @@ export class DockWrapper extends LitElement {
     if (!dragState || dragState.invalid)
       return
 
-    const beforeRects = this.measureLayout(this.getVisibleLayoutChildren())
+    const layoutChildren = this.getVisibleDragLayoutChildren(dragState)
+    const beforeRects = this.measureLayout(layoutChildren)
     dragState.invalid = true
     dragState.outside = false
     this.movePlaceholder(dragState.currentIndex, true)
-    this.animateLayout(this.getVisibleLayoutChildren(), beforeRects)
+    this.animateLayout(layoutChildren, beforeRects)
     this.resetAll()
   }
 
@@ -1020,13 +1147,17 @@ export class DockWrapper extends LitElement {
     const referenceItem = items[index]
     const referenceNode = referenceItem
       ?? (dragState.block.nextSeparator?.isConnected ? dragState.block.nextSeparator : null)
+    const container = dragState.block.container
 
     if (referenceNode) {
       if (dragState.placeholder.nextSibling !== referenceNode)
-        this.insertBefore(dragState.placeholder, referenceNode)
+        container.insertBefore(dragState.placeholder, referenceNode)
     }
-    else if (dragState.placeholder.parentNode !== this || dragState.placeholder.nextSibling !== null) {
-      this.appendChild(dragState.placeholder)
+    else if (
+      dragState.placeholder.parentNode !== container
+      || dragState.placeholder.nextSibling !== null
+    ) {
+      container.appendChild(dragState.placeholder)
     }
   }
 
@@ -1035,6 +1166,7 @@ export class DockWrapper extends LitElement {
       return
     this._ready = true
     this.shadowRoot?.host?.addEventListener('click', this.onHostClick as EventListener, true)
+    this.shadowRoot?.host?.addEventListener('dock-items-change', this.onDockItemsChange)
     this.shadowRoot?.host?.addEventListener('dragstart', this.onHostDragStart as EventListener)
     this.shadowRoot?.host?.addEventListener('mouseleave', this.onHostMouseleave as EventListener)
     this.shadowRoot?.host?.addEventListener('mousemove', this.onHostMousemove as EventListener)
@@ -1051,7 +1183,7 @@ export class DockWrapper extends LitElement {
 
   private onWillChangeChanged(v: boolean) {
     const value = v ? 'width, height' : 'auto'
-    this.getDockItems().forEach((child) => {
+    this.getManagedDockItems().forEach((child) => {
       if (child.style.getPropertyValue('--dock-item-will-change') !== value)
         child.style.setProperty('--dock-item-will-change', value)
     })
@@ -1074,11 +1206,19 @@ export class DockWrapper extends LitElement {
   }
 
   private provideSharedProps() {
-    this.getDockItems().forEach((el) => {
+    this.getManagedDockItems().forEach((el) => {
       this.setAttributeIfChanged(el, 'direction', this.direction)
       this.setAttributeIfChanged(el, 'easing', this.easing)
       this.setAttributeIfChanged(el, 'gap', this.gapValue)
       this.setAttributeIfChanged(el, 'size', this.sizeValue)
+    })
+    this._itemProviders.forEach((el) => {
+      this.setAttributeIfChanged(el, 'direction', this.direction)
+      this.setAttributeIfChanged(el, 'easing', this.easing)
+      this.setAttributeIfChanged(el, 'gap', this.gapValue)
+      this.setAttributeIfChanged(el, 'size', this.sizeValue)
+      this.setAttributeIfChanged(el, 'position', this.position)
+      this.setAttributeIfChanged(el, 'sortable', this.sortableValue ? 'true' : 'false')
     })
     this.getDockSeparators().forEach((el) => {
       this.setAttributeIfChanged(el, 'direction', this.direction)
@@ -1088,7 +1228,7 @@ export class DockWrapper extends LitElement {
 
   private resetAll() {
     const draggedItem = this._dragState?.item
-    this.getDockItems().forEach((child) => {
+    this.getManagedDockItems().forEach((child) => {
       if (child.style.display === 'none' || child === draggedItem)
         return
       this.setItemScale(child, 1)
@@ -1128,24 +1268,67 @@ export class DockWrapper extends LitElement {
   private restoreDraggedItem(dragState: DragState, newIndex: number) {
     const items = this.getVisibleBlockItems(dragState)
     const referenceItem = items[newIndex]
+    const container = dragState.block.container
     if (referenceItem)
-      this.insertBefore(dragState.item, referenceItem)
+      container.insertBefore(dragState.item, referenceItem)
     else if (dragState.block.nextSeparator?.isConnected)
-      this.insertBefore(dragState.item, dragState.block.nextSeparator)
+      container.insertBefore(dragState.item, dragState.block.nextSeparator)
     else
-      this.appendChild(dragState.item)
+      container.appendChild(dragState.item)
 
     this.resetDraggedItemStyle(dragState.item)
     dragState.placeholder.remove()
-    this.syncChildren()
-    this.dispatchSort(dragState, this.getDockItems().indexOf(dragState.item))
+    if (dragState.block.provider) {
+      this.syncProviderItems(dragState.block.provider)
+    }
+    else {
+      this.syncChildren()
+      this.dispatchSort(dragState, this.getDockItems().indexOf(dragState.item))
+    }
     this.cleanupAfterDrag()
   }
 
   private syncChildren(elements?: Element[]) {
     const source = elements ?? Array.from(this.children)
+    const previousProviderItems = this.getProviderDockItems()
     this._layoutChildren = source.filter(isDockLayoutChild)
     this._children = this._layoutChildren.filter(isDockItemElement)
+    this._itemProviders = source.filter(isDockItemProviderElement)
+    this._providerItems.clear()
+    this._itemProviders.forEach((provider) => {
+      this._providerItems.set(provider, this.readProviderItems(provider))
+    })
+    this.cleanupStaleDockItems(previousProviderItems)
+  }
+
+  private cleanupDockItems(items: DockItem[]) {
+    items.forEach((item) => {
+      this.setItemScale(item, 1)
+      item.style.removeProperty('--dock-item-will-change')
+    })
+  }
+
+  private cleanupStaleDockItems(previousItems: DockItem[]) {
+    const managedItems = new Set(this.getManagedDockItems())
+    this.cleanupDockItems(previousItems.filter(item => !managedItems.has(item)))
+  }
+
+  private readProviderItems(provider: DockItemProvider) {
+    try {
+      const items = provider.dockItems
+      if (!Array.isArray(items))
+        return []
+      return Array.from(new Set(items.filter(isDockItemElement)))
+    }
+    catch {
+      return []
+    }
+  }
+
+  private syncProviderItems(provider: DockItemProvider) {
+    const previousItems = this._providerItems.get(provider) ?? []
+    this._providerItems.set(provider, this.readProviderItems(provider))
+    this.cleanupStaleDockItems(previousItems)
   }
 
   private updateDragPreviewPosition(

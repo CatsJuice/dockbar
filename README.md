@@ -113,6 +113,17 @@ You may need to look at docs if you are using a framework like Vue.js or React.
 
 Apply `class` to `dock-wrapper` and `dock-item` and customize your own style.
 
+Use the named `indicator` slot for badges, running dots, or other decorations that should follow an item's layout position without inheriting its magnification:
+
+```html
+<dock-item>
+  <button>Mail</button>
+  <span slot="indicator" class="running-indicator"></span>
+</dock-item>
+```
+
+The indicator layer fills the current `dock-item` footprint and is exposed as `::part(indicator)`. Its slotted content is not placed inside the scaled visual container, so a `4px` indicator remains `4px` while the icon grows.
+
 For more, see [Configuration](#configuration).
 
 ### Sortable dock
@@ -141,6 +152,101 @@ When a sortable dock contains `dock-separator`, each separator creates a block. 
     console.log('delete', index, item.dataset.id)
   })
 </script>
+```
+
+### Minimized windows
+
+The optional `dockbar/minimize` entry adds a managed macOS-style minimized-window area. It snapshots any mounted element, animates it through a document-level Genie canvas, and restores it when its Dock thumbnail is clicked.
+
+```ts
+import 'dockbar'
+import 'dockbar/minimize'
+```
+
+Declare the separator explicitly so the minimized area can be placed wherever your Dock design needs it.
+
+```html
+<dock-wrapper>
+  <dock-item>Finder</dock-item>
+  <dock-item>Mail</dock-item>
+  <dock-separator></dock-separator>
+  <dock-minimize-area id="windows"></dock-minimize-area>
+</dock-wrapper>
+```
+
+Registering a window returns a persistent handle. The source may be an element or a getter when a framework owns the ref.
+
+```ts
+const area = document.querySelector('dock-minimize-area')
+if (!area)
+  throw new Error('Missing dock-minimize-area')
+
+const mail = area.registerWindow({
+  id: 'mail',
+  label: 'Mail',
+  source: () => document.querySelector<HTMLElement>('#mail-window'),
+})
+
+minimizeButton.addEventListener('pointerenter', () => mail.prepare())
+minimizeButton.addEventListener('pointerleave', () => mail.cancelPrepare())
+minimizeButton.addEventListener('click', () => mail.minimize())
+
+// The thumbnail restores automatically when clicked. Application icons can
+// restore the same window explicitly.
+mailIcon.addEventListener('click', () => area.restore('mail'))
+```
+
+`DockMinimizeArea` is still an `HTMLElement`: importing `dockbar/minimize` defines that custom-element subclass and augments `HTMLElementTagNameMap`, so TypeScript knows that a `dock-minimize-area` query has methods such as `registerWindow()`. If you query by an ID-only selector, annotate it explicitly:
+
+```ts
+import type { DockMinimizeArea } from 'dockbar/minimize'
+
+const area = document.querySelector<DockMinimizeArea>('#windows')
+```
+
+`prepare()` starts a reusable snapshot before the click so capture latency does not delay the animation. Calling `minimize()` without preparing is also supported.
+
+For a one-off integration, the area exposes the same operation directly and retains the resulting handle by `id`:
+
+```ts
+await area.minimize({
+  id: 'notes',
+  label: 'Notes',
+  source: notesWindow,
+})
+await area.restore('notes')
+```
+
+The area keeps registrations until `unregisterWindow(id)` or `handle.dispose()` is called. `getWindow(id)` returns an existing handle. Handle state is one of `idle`, `minimizing`, `minimized`, `restoring`, or `disposed`; repeated calls for the current stable state are safe.
+
+The default visibility adapter keeps the source mounted and temporarily applies `visibility: hidden`, `pointer-events: none`, `inert`, and `aria-hidden`, restoring the exact previous inline state afterward. Framework integrations that own visibility may provide an asynchronous adapter:
+
+```ts
+const handle = area.registerWindow({
+  id: 'editor',
+  source: () => editorElement.value,
+  visibility: {
+    async setHidden(hidden, { source }) {
+      await updateFrameworkState(hidden)
+      source.dataset.minimized = String(hidden)
+    },
+  },
+})
+```
+
+Do not unmount the source while it is minimized. Call `invalidatePreparedSnapshot()` after content changes that should invalidate a prepared capture; geometry and scroll changes are detected automatically.
+
+Use `data-dock-snapshot-ignore` to exclude video, iframe, private, or otherwise uncapturable descendants. Per-window `capture.filter` and `capture.onCloneNode` hooks are also available for custom snapshot handling.
+
+The add-on respects `prefers-reduced-motion`, supports all four Dock positions, and permits multiple minimized windows. Thumbnails initially follow minimize order. When the parent `dock-wrapper` is `sortable`, they can be reordered inside the minimize area, but cannot cross its explicit separator. Thumbnail reorders stay internal and do not emit the wrapper's `on-sort` or `on-delete` events.
+
+Generated previews expose `::part(item)`, `::part(button)`, and `::part(thumbnail)`. Their button cursor defaults to `default`; consumers can opt into `pointer`, `grab`, or another cursor through `dock-minimize-area::part(button)`.
+
+CDN users should load the core bundle first and the add-on second:
+
+```html
+<script src="https://unpkg.com/dockbar@latest/dockbar.iife.js"></script>
+<script src="https://unpkg.com/dockbar@latest/dockbar.minimize.iife.js"></script>
 ```
 
 
@@ -174,6 +280,7 @@ There are some problems yet to be solved:
 | -------- | ---- | ------- | ----------- |
 | `size` | `number` | `40` | The base height of `dock-item` and fallback width in `px`, see [Sizes](#sizes) |
 | `width` | `number` | `size` | Optional per-`dock-item` base width in `px` |
+| `height` | `number` | `size` | Optional per-`dock-item` base height in `px` |
 | `padding` | `number` | `8` | The padding of `dock-wrapper` in `px`, see [Sizes](#sizes) |
 | `gap` | `number` | `8` | The gap between `dock-item`s in `px`, see [Sizes](#sizes) |
 | `maxScale` | `number` | `2` | The max scale of `dock-item`, see [Sizes](#sizes) |
@@ -221,6 +328,33 @@ interface DockDeleteDetail {
 
 The component only emits the event. Removing the item from your application state is the responsibility of the parent app.
 
+### `on-window-state-change`
+
+Emitted by `dock-minimize-area` whenever a registered handle changes state.
+
+```ts
+interface DockWindowStateChangeDetail {
+  area: DockMinimizeArea
+  id: string
+  handle: DockWindowHandle
+  previousState: DockWindowState
+  state: DockWindowState
+}
+```
+
+### `on-window-error`
+
+Emitted by `dock-minimize-area` when capture or a transition fails. Calls made through the imperative API also reject their returned promise.
+
+```ts
+interface DockWindowErrorDetail {
+  area: DockMinimizeArea
+  error: unknown
+  handle: DockWindowHandle
+  id: string
+  operation: 'prepare' | 'minimize' | 'restore' | 'dispose'
+}
+```
 
 ### Sizes
 

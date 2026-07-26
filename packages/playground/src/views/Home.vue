@@ -8,7 +8,9 @@ const $el = ref<HTMLElement>()
 
 const { width } = useElementBounding($el)
 
-const wrap = computed(() => width.value < 750)
+// Avoid a raw less-than comparison here: UnoCSS's Attributify extractor can
+// interpret it as the start of an HTML tag and skip later valueless attributes.
+const wrap = computed(() => !(width.value >= 750))
 const packageName = 'dockbar'
 
 const installCodes = [
@@ -33,7 +35,7 @@ const installCodes = [
 <template>
   <div
     ref="$el"
-    full overflow-hidden p2 justify-between flex rounded-inherit flex-nowrap gap-2
+    full flex flex-nowrap justify-between gap-2 overflow-hidden rounded-inherit p2
     :style="{
       // paddingBottom: `${config.size / 2 + 5 + config.padding}px`,
       flexDirection: wrap ? 'column' : 'row',
@@ -42,11 +44,12 @@ const installCodes = [
     }"
   >
     <div
+      data-testid="home-sidebar"
       flex="~ col"
       :class="wrap
         ? ['items-center', 'h-fit']
         : ['h-full', 'w0', 'flex-1', 'overflow-y-auto', 'max-w-350px', 'min-w-200px']"
-      justify-between shrink-0 p8 gap-5 pb0
+      shrink-0 justify-between gap-5 p8 pb0
     >
       <div
         text-white
@@ -55,9 +58,9 @@ const installCodes = [
       >
         <MagicCard w-100px>
           <!-- <img w-100px src="/dockbar.svg"> -->
-          <div w-100px h-100px v-html="dockbarSvg" />
+          <div h-100px w-100px v-html="dockbarSvg" />
         </MagicCard>
-        <h1 font-bold text-3xl mt-4>
+        <h1 mt-4 text-3xl font-bold>
           Dockbar
         </h1>
         <p opacity-70>
@@ -66,7 +69,7 @@ const installCodes = [
           (<a underline target="_blank" href="https://lit.dev/">Lit</a> based)
         </p>
 
-        <p opacity-70 text-sm mt-2>
+        <p mt-2 text-sm opacity-70>
           This library was inspired by
           <a href="https://rauno.me/" target="_blank" underline>
             rauno's website
@@ -74,7 +77,7 @@ const installCodes = [
         </p>
 
         <a
-          opacity-70 underline mt-2 text-xs hover:opacity-80
+          mt-2 text-xs underline opacity-70 hover:opacity-80
           href="https://github.com/CatsJuice/dockbar"
           target="_blank"
         >
@@ -85,13 +88,13 @@ const installCodes = [
         </a>
       </div>
 
-      <div flex="~ col" text-white w-full max-w-350px :class="wrap ? ['items-stretch'] : []">
-        <div font-500 pb1 text-lg :class="wrap ? ['text-center'] : []">
+      <div flex="~ col" max-w-350px w-full text-white :class="wrap ? ['items-stretch'] : []">
+        <div pb1 text-lg font-500 :class="wrap ? ['text-center'] : []">
           Install
         </div>
         <CodeBox :radius="12" :codes="installCodes" />
 
-        <div text-lg font-500 pb1 mt4 :class="wrap ? ['text-center'] : []">
+        <div mt4 pb1 text-lg font-500 :class="wrap ? ['text-center'] : []">
           Configurations
         </div>
         <ConfigPanel class="glass" :class="wrap ? [] : ['w-full']" />
@@ -105,8 +108,8 @@ const installCodes = [
       :class="wrap ? ['w-full', 'h-fit'] : ['w-0', 'flex-3', 'h-full']"
     >
       <CodeBox
-        full
-        no-padding
+
+        no-padding full
         :radius="40" :codes="[{ lang: 'html', code }]"
         editor-padding="20px"
       />
