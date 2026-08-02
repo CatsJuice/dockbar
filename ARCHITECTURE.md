@@ -148,12 +148,12 @@ Its responsibilities are:
    The internal DOM is a `<li>` with nested positioning and scaling wrappers around the default `<slot>`, plus a named `indicator` slot in a separate non-scaling overlay layer.
 
 2. Accept layout and animation inputs.
-   It exposes `size`, optional per-item `width`, `gap`, `direction`, `easing`, and `scale` as Lit-backed attributes/properties. `scale` uses a custom non-rendering accessor because the shadow DOM structure does not need to be re-rendered for every pointer frame.
+   It exposes `size`, optional per-item `width` and `height`, `resize-duration`, `resize-exit-duration`, `resize-ease`, `gap`, `direction`, `easing`, and `scale` as Lit-backed attributes/properties. `scale` uses a custom non-rendering accessor because the shadow DOM structure does not need to be re-rendered for every pointer frame.
 
-3. Animate on `scale` changes.
-   The scale accessor calls `onScaleChanged()` directly after the first render. Each item keeps one reusable Anime.js numeric scale channel instead of constructing new animations for every pointer update. Its render callback derives all three DOM writes from that value:
-   - width and height on the outer `.dock-item` element
-   - transform scale on the inner `.dock-item__scale` element
+3. Animate geometry changes.
+   The scale accessor calls `onScaleChanged()` directly after the first render. Each item keeps one reusable Anime.js geometry channel instead of constructing new animations for every pointer or base-size update. Width, height, and scale share the same geometry state so changing an item's base dimensions preserves its current Dock magnification instead of briefly rendering at scale `1`. Pointer-driven scale remains a fast 100ms response. Base-size expansion and contraction default to crisp 200ms and 160ms transitions with a dedicated smooth-out curve; all three resize parameters are configurable per item. Its render callback applies:
+   - scaled width and height on the outer `.dock-item` element
+   - animated base width, base height, and transform scale on the inner `.dock-item__scale` element
 
 4. Preserve hover continuity between items.
    `::before` and `::after` pseudo-elements extend the effective interaction area across the configured gap, reducing the chance that the hover effect breaks when the pointer moves between neighboring items.
@@ -226,7 +226,7 @@ The runtime interaction loop is:
 4. `dock-wrapper` sees the slot change, captures the children, and propagates shared props.
 5. Pointer movement queues a single animation-frame update; later events in the same frame replace the pending coordinates.
 6. The frame measures visible items, calculates the scale profile, and assigns only changed `scale` properties. Attribute parsing is bypassed for this internal wrapper-to-item update.
-7. Each changed `dock-item` retargets its reusable Anime.js scale channel without requesting a Lit render.
+7. Each changed `dock-item` retargets its reusable Anime.js geometry channel without requesting a Lit render. Reactive base-size changes use that same channel, keeping width, height, and magnification synchronized.
 
 The slot content itself is never interpreted by the library. The library only scales the container and lets the slotted child fill the item box via `::slotted(*) { width: 100%; height: 100%; }`.
 

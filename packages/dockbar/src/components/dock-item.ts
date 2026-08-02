@@ -3,13 +3,22 @@ import { customElement, property } from 'lit/decorators.js'
 import { createAnimatable } from 'animejs'
 import type { AnimatableObject, AnimatableParams } from 'animejs'
 
+const RESIZE_EASE = 'cubic-bezier(0.22, 1, 0.36, 1)'
+
 @customElement('dock-item')
 export class DockItem extends LitElement {
-  private readonly _animatedScale = { value: 1 }
+  private readonly _animatedGeometry = {
+    width: 40,
+    height: 40,
+    scale: 1,
+  }
+
   private _scale = 1
   private _scaleAnimation: AnimatableObject | null = null
   private _scaleElement: HTMLElement | null = null
   private _sizeElement: HTMLElement | null = null
+  private _targetHeight = 40
+  private _targetWidth = 40
 
   @property({ type: Number })
   size = 40
@@ -19,6 +28,15 @@ export class DockItem extends LitElement {
 
   @property({ type: Number })
   height?: number
+
+  @property({ type: Number, attribute: 'resize-duration' })
+  resizeDuration = 200
+
+  @property({ type: Number, attribute: 'resize-exit-duration' })
+  resizeExitDuration = 160
+
+  @property({ type: String, attribute: 'resize-ease' })
+  resizeEase = RESIZE_EASE
 
   @property({ type: String })
   easing = 'linear'
@@ -72,7 +90,15 @@ export class DockItem extends LitElement {
   }
 
   get liStyle() {
-    return `${this.sizeStyle};${this.gapStyle}`
+    return `${this.animatedOuterSizeStyle};${this.gapStyle}`
+  }
+
+  get animatedOuterSizeStyle() {
+    return `width: ${this._animatedGeometry.width * this._animatedGeometry.scale}px;height: ${this._animatedGeometry.height * this._animatedGeometry.scale}px;`
+  }
+
+  get animatedContentSizeStyle() {
+    return `width: ${this._animatedGeometry.width}px;height: ${this._animatedGeometry.height}px;transform: scale(${this._animatedGeometry.scale});`
   }
 
   override get className() {
@@ -83,7 +109,7 @@ export class DockItem extends LitElement {
     return html`
       <li class=${this.className} style=${this.liStyle}>
         <div class="dock-item__pos">
-          <div class="dock-item__scale" style=${this.sizeStyle}>
+          <div class="dock-item__scale" style=${this.animatedContentSizeStyle}>
             <slot></slot>
           </div>
         </div>
@@ -99,6 +125,17 @@ export class DockItem extends LitElement {
     this._scaleElement = this.shadowRoot?.querySelector<HTMLElement>('.dock-item__scale') ?? null
   }
 
+  override willUpdate() {
+    if (this.hasUpdated)
+      return
+
+    this._animatedGeometry.width = this.widthValue
+    this._animatedGeometry.height = this.heightValue
+    this._animatedGeometry.scale = this.scale
+    this._targetWidth = this.widthValue
+    this._targetHeight = this.heightValue
+  }
+
   override updated(changedProperties: Map<string, unknown>) {
     if (
       changedProperties.has('size')
@@ -109,15 +146,37 @@ export class DockItem extends LitElement {
   }
 
   get animationEase() {
-    if (this.easing.startsWith('cubicBezier('))
-      return this.easing.replace('cubicBezier(', 'cubic-bezier(')
+    return this.normalizeEase(this.easing, 'linear')
+  }
 
-    if (this.easing.startsWith('ease') && this.easing.length > 4) {
-      const name = this.easing.slice(4)
+  get resizeAnimationEase() {
+    return this.normalizeEase(this.resizeEase, RESIZE_EASE)
+  }
+
+  get resizeDurationValue() {
+    return Number.isFinite(this.resizeDuration) && this.resizeDuration >= 0
+      ? this.resizeDuration
+      : 200
+  }
+
+  get resizeExitDurationValue() {
+    return Number.isFinite(this.resizeExitDuration) && this.resizeExitDuration >= 0
+      ? this.resizeExitDuration
+      : 160
+  }
+
+  private normalizeEase(easing: string, fallback: string) {
+    const value = typeof easing === 'string' && easing.trim() ? easing.trim() : fallback
+
+    if (value.startsWith('cubicBezier('))
+      return value.replace('cubicBezier(', 'cubic-bezier(')
+
+    if (value.startsWith('ease') && value.length > 4) {
+      const name = value.slice(4)
       return `${name.slice(0, 1).toLowerCase()}${name.slice(1)}`
     }
 
-    return this.easing
+    return value
   }
 
   get isPreview() {
@@ -140,20 +199,40 @@ export class DockItem extends LitElement {
       return
     }
 
+    const nextWidth = this.widthValue
+    const nextHeight = this.heightValue
+    const widthChanged = !Object.is(nextWidth, this._targetWidth)
+    const heightChanged = !Object.is(nextHeight, this._targetHeight)
+    const isExpanding = nextWidth > this._targetWidth || nextHeight > this._targetHeight
+    const resizeDuration = isExpanding
+      ? this.resizeDurationValue
+      : this.resizeExitDurationValue
+
+    this._targetWidth = nextWidth
+    this._targetHeight = nextHeight
+
     if (!this._scaleAnimation) {
       const animationParameters = {
-        value: { duration: 100 },
+        width: { duration: this.resizeDurationValue },
+        height: { duration: this.resizeDurationValue },
+        scale: { duration: 100 },
         onRender: () => {
-          const animatedScale = this._animatedScale.value
-          sizeEl.style.width = `${this.widthValue * animatedScale}px`
-          sizeEl.style.height = `${this.heightValue * animatedScale}px`
+          const { width, height, scale: animatedScale } = this._animatedGeometry
+          sizeEl.style.width = `${width * animatedScale}px`
+          sizeEl.style.height = `${height * animatedScale}px`
+          scaleEl.style.width = `${width}px`
+          scaleEl.style.height = `${height}px`
           scaleEl.style.transform = `scale(${animatedScale})`
         },
       } as unknown as AnimatableParams
-      this._scaleAnimation = createAnimatable(this._animatedScale, animationParameters)
+      this._scaleAnimation = createAnimatable(this._animatedGeometry, animationParameters)
     }
 
-    this._scaleAnimation.value!(scale, 100, this.animationEase)
+    if (widthChanged)
+      this._scaleAnimation.width!(nextWidth, resizeDuration, this.resizeAnimationEase)
+    if (heightChanged)
+      this._scaleAnimation.height!(nextHeight, resizeDuration, this.resizeAnimationEase)
+    this._scaleAnimation.scale!(scale, 100, this.animationEase)
   }
 
   static override styles = css`

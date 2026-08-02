@@ -1,0 +1,272 @@
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- Local preview support. CodePen users should also paste style.css into the CSS panel. -->
+<link rel="stylesheet" href="./style.css">
+
+<div class="desktop">
+  <div class="release-badge" id="release-badge">
+    <span class="release-light"></span>
+    dockbar@1.0.0 · unpkg
+  </div>
+
+  <section
+    class="mock-window files-window"
+    id="files-window"
+    data-window-id="files"
+    aria-label="Files window"
+  >
+    <header class="titlebar">
+      <div class="traffic-lights">
+        <button class="traffic close" type="button" data-action="close" aria-label="Close Files">×</button>
+        <button class="traffic minimize" type="button" data-action="minimize" aria-label="Minimize Files">−</button>
+        <button class="traffic zoom" type="button" data-action="zoom" aria-label="Zoom Files">+</button>
+      </div>
+      <strong>Files</strong>
+      <span></span>
+    </header>
+    <div class="window-body finder">
+      <aside>
+        <b>Favorites</b>
+        <button class="selected">🗂️ Recents</button>
+        <button>☁️ iCloud Drive</button>
+        <button>⬇️ Downloads</button>
+        <button>🖥️ Desktop</button>
+      </aside>
+      <main>
+        <div class="file-grid">
+          <article><span>📁</span><b>Projects</b></article>
+          <article><span>📁</span><b>Design</b></article>
+          <article><span>📄</span><b>README</b></article>
+          <article><span>🖼️</span><b>Wallpaper</b></article>
+          <article><span>🎵</span><b>Playlist</b></article>
+          <article><span>📦</span><b>Archive</b></article>
+        </div>
+      </main>
+    </div>
+  </section>
+
+  <section
+    class="mock-window notes-window"
+    id="notes-window"
+    data-window-id="notes"
+    aria-label="Notes window"
+  >
+    <header class="titlebar">
+      <div class="traffic-lights">
+        <button class="traffic close" type="button" data-action="close" aria-label="Close Notes">×</button>
+        <button class="traffic minimize" type="button" data-action="minimize" aria-label="Minimize Notes">−</button>
+        <button class="traffic zoom" type="button" data-action="zoom" aria-label="Zoom Notes">+</button>
+      </div>
+      <strong>Notes</strong>
+      <span></span>
+    </header>
+    <div class="window-body notes">
+      <aside>
+        <b>Today</b>
+        <button class="selected">Dockbar demo</button>
+        <button>Weekend ideas</button>
+        <button>Reading list</button>
+      </aside>
+      <main>
+        <time>26 July 2026 at 5:42 PM</time>
+        <h1>Dockbar 1.0.0</h1>
+        <p>Click the yellow traffic light to capture this window and send it into the Dock.</p>
+        <ul>
+          <li>Genie minimize animation</li>
+          <li>Sortable window previews</li>
+          <li>Click a preview to restore</li>
+        </ul>
+      </main>
+    </div>
+  </section>
+
+  <section
+    class="mock-window music-window"
+    id="music-window"
+    data-window-id="music"
+    aria-label="Music window"
+    hidden
+  >
+    <header class="titlebar titlebar-dark">
+      <div class="traffic-lights">
+        <button class="traffic close" type="button" data-action="close" aria-label="Close Music">×</button>
+        <button class="traffic minimize" type="button" data-action="minimize" aria-label="Minimize Music">−</button>
+        <button class="traffic zoom" type="button" data-action="zoom" aria-label="Zoom Music">+</button>
+      </div>
+      <strong>Music</strong>
+      <span></span>
+    </header>
+    <div class="window-body player">
+      <div class="album-art">
+        <span>♫</span>
+      </div>
+      <div class="track">
+        <small>NOW PLAYING</small>
+        <h1>Genie in a Bottle</h1>
+        <p>Dockbar Playground</p>
+        <div class="progress"><i></i></div>
+        <div class="player-controls">
+          <button>↶</button>
+          <button class="play">▶</button>
+          <button>↷</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section
+    class="mock-window calendar-window"
+    id="calendar-window"
+    data-window-id="calendar"
+    aria-label="Calendar window"
+  >
+    <header class="titlebar">
+      <div class="traffic-lights">
+        <button class="traffic close" type="button" data-action="close" aria-label="Close Calendar">×</button>
+        <button class="traffic minimize" type="button" data-action="minimize" aria-label="Minimize Calendar">−</button>
+        <button class="traffic zoom" type="button" data-action="zoom" aria-label="Zoom Calendar">+</button>
+      </div>
+      <strong>Calendar</strong>
+      <span></span>
+    </header>
+    <div class="window-body calendar">
+      <div class="calendar-heading">
+        <div><small>JULY</small><strong>26</strong></div>
+        <h1>July 2026</h1>
+        <button type="button">Today</button>
+      </div>
+      <div class="weekdays">
+        <b>MON</b><b>TUE</b><b>WED</b><b>THU</b><b>FRI</b><b>SAT</b><b>SUN</b>
+      </div>
+      <div class="calendar-grid">
+        <span class="muted">29</span><span class="muted">30</span><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span>
+        <span>6</span><span>7</span><span>8</span><span>9</span><span>10</span><span>11</span><span>12</span>
+        <span>13</span><span>14</span><span>15</span><span>16</span><span>17</span><span>18</span><span>19</span>
+        <span>20</span><span>21</span><span>22</span><span>23</span><span>24</span><span>25</span><span class="today">26</span>
+        <span>27</span><span>28</span><span>29</span><span>30</span><span>31</span><span class="muted">1</span><span class="muted">2</span>
+      </div>
+      <div class="event-card"><i></i><span><b>Dockbar 1.0 launch</b><small>5:30 PM – 6:30 PM</small></span></div>
+    </div>
+  </section>
+
+  <section
+    class="mock-window terminal-window"
+    id="terminal-window"
+    data-window-id="terminal"
+    aria-label="Terminal window"
+    hidden
+  >
+    <header class="titlebar titlebar-dark">
+      <div class="traffic-lights">
+        <button class="traffic close" type="button" data-action="close" aria-label="Close Terminal">×</button>
+        <button class="traffic minimize" type="button" data-action="minimize" aria-label="Minimize Terminal">−</button>
+        <button class="traffic zoom" type="button" data-action="zoom" aria-label="Zoom Terminal">+</button>
+      </div>
+      <strong>Terminal — zsh</strong>
+      <span></span>
+    </header>
+    <div class="window-body terminal">
+      <p><span>➜</span> <b>demo</b> npm install dockbar@1.0.0</p>
+      <p class="dim">added 9 packages in 1.2s</p>
+      <p><span>➜</span> <b>demo</b> npm run dev</p>
+      <p class="accent">Dockbar ready at http://localhost:5173</p>
+      <p><span>➜</span> <b>demo</b> <i class="terminal-cursor"></i></p>
+    </div>
+  </section>
+
+  <section
+    class="mock-window weather-window"
+    id="weather-window"
+    data-window-id="weather"
+    aria-label="Weather window"
+    hidden
+  >
+    <header class="titlebar weather-titlebar">
+      <div class="traffic-lights">
+        <button class="traffic close" type="button" data-action="close" aria-label="Close Weather">×</button>
+        <button class="traffic minimize" type="button" data-action="minimize" aria-label="Minimize Weather">−</button>
+        <button class="traffic zoom" type="button" data-action="zoom" aria-label="Zoom Weather">+</button>
+      </div>
+      <strong>Weather</strong>
+      <span></span>
+    </header>
+    <div class="window-body weather">
+      <div class="weather-now">
+        <div><small>Singapore</small><strong>29°</strong><p>Partly Cloudy</p></div>
+        <span>🌤️</span>
+      </div>
+      <div class="forecast">
+        <article><b>Now</b><span>🌤️</span><strong>29°</strong></article>
+        <article><b>7 PM</b><span>☁️</span><strong>28°</strong></article>
+        <article><b>8 PM</b><span>🌧️</span><strong>27°</strong></article>
+        <article><b>9 PM</b><span>🌧️</span><strong>27°</strong></article>
+        <article><b>10 PM</b><span>☁️</span><strong>26°</strong></article>
+      </div>
+    </div>
+  </section>
+
+  <div class="dock-shell">
+    <dock-wrapper
+      id="demo-dock"
+      size="58"
+      padding="10"
+      gap="10"
+      max-scale="1.75"
+      max-range="180"
+      easing="cubic-bezier(0, 0.55, 0.45, 1)"
+      direction="horizontal"
+      position="bottom"
+      sortable
+    >
+      <dock-item>
+        <button class="app-icon files-icon" type="button" data-app-id="files" title="Files">
+          <span>📁</span>
+        </button>
+        <span class="running-dot" slot="indicator" data-indicator-for="files"></span>
+      </dock-item>
+
+      <dock-item>
+        <button class="app-icon notes-icon" type="button" data-app-id="notes" title="Notes">
+          <span>📝</span>
+        </button>
+        <span class="running-dot" slot="indicator" data-indicator-for="notes"></span>
+      </dock-item>
+
+      <dock-item>
+        <button class="app-icon music-icon" type="button" data-app-id="music" title="Music">
+          <span>♪</span>
+        </button>
+        <span class="running-dot" slot="indicator" data-indicator-for="music" hidden></span>
+      </dock-item>
+
+      <dock-item>
+        <button class="app-icon calendar-icon" type="button" data-app-id="calendar" title="Calendar">
+          <span><small>JUL</small><b>26</b></span>
+        </button>
+        <span class="running-dot" slot="indicator" data-indicator-for="calendar"></span>
+      </dock-item>
+
+      <dock-item>
+        <button class="app-icon terminal-icon" type="button" data-app-id="terminal" title="Terminal">
+          <span>❯_</span>
+        </button>
+        <span class="running-dot" slot="indicator" data-indicator-for="terminal" hidden></span>
+      </dock-item>
+
+      <dock-item>
+        <button class="app-icon weather-icon" type="button" data-app-id="weather" title="Weather">
+          <span>🌤️</span>
+        </button>
+        <span class="running-dot" slot="indicator" data-indicator-for="weather" hidden></span>
+      </dock-item>
+
+      <dock-separator id="preview-separator" hidden></dock-separator>
+      <dock-minimize-area id="preview-area" aria-label="Minimized windows"></dock-minimize-area>
+    </dock-wrapper>
+  </div>
+</div>
+
+<script src="https://unpkg.com/dockbar@1.0.0/dockbar.iife.js"></script>
+<script src="https://unpkg.com/dockbar@1.0.0/dockbar.minimize.iife.js"></script>
+<!-- Local preview support. CodePen users should also paste script.js into the JS panel. -->
+<script src="./script.js"></script>

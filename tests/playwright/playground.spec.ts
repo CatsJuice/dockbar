@@ -159,6 +159,196 @@ test('playground renders dock and hover expands an item', async ({ page }) => {
   await expect.poll(getRenderedWidth).toBeGreaterThan(beforeHover)
 })
 
+test('macOS Music item expands into a player using the active dock scale', async ({ page }) => {
+  await page.goto('/?style=macos')
+  await waitForDockUpgrade(page, 'dock-wrapper')
+  await page.waitForTimeout(500)
+
+  const music = page.locator('[data-app-id="music"]')
+  const dockShell = page.locator('.macos-dock .light-border-frame')
+  const standardIconRadius = await page.locator('[data-app-id="tv"] > img').evaluate((element) => {
+    return getComputedStyle(element).borderRadius
+  })
+  const [beforeHover, shellBeforeHover] = await Promise.all([
+    music.boundingBox(),
+    dockShell.boundingBox(),
+  ])
+  if (!beforeHover || !shellBeforeHover)
+    throw new Error('Missing Music dock item')
+
+  const containerTransitionProperties = await music.evaluate((element) => {
+    return getComputedStyle(element).transitionProperty.split(',').map(value => value.trim())
+  })
+  expect(containerTransitionProperties).toContain('width')
+
+  const collapsedVisual = await music.evaluate((element) => {
+    const player = element.querySelector('.music-player')
+    const artwork = element.querySelector('.music-player__artwork')
+    const cover = element.querySelector('.music-player__cover')
+    const reveal = element.querySelector('.music-player__reveal')
+    const vinyl = element.querySelector('.music-player__vinyl')
+    if (!player || !artwork || !cover || !reveal || !vinyl)
+      throw new Error('Missing collapsed Music layers')
+
+    const containerRect = element.getBoundingClientRect()
+    const artworkRect = artwork.getBoundingClientRect()
+    return {
+      artworkOpacity: Number.parseFloat(getComputedStyle(artwork).opacity),
+      artworkOverflow: getComputedStyle(artwork).overflow,
+      artworkShadow: getComputedStyle(artwork).boxShadow,
+      artworkTransitionProperty: getComputedStyle(artwork).transitionProperty,
+      artworkTransitionDuration: getComputedStyle(artwork).transitionDuration,
+      backgroundColor: getComputedStyle(element).backgroundColor,
+      coverBorderRadius: getComputedStyle(cover).borderRadius,
+      coverOpacity: Number.parseFloat(getComputedStyle(cover).opacity),
+      coverTransitionDuration: getComputedStyle(cover).transitionDuration,
+      artworkInset: {
+        bottom: Math.abs(containerRect.bottom - artworkRect.bottom),
+        left: Math.abs(containerRect.left - artworkRect.left),
+        right: Math.abs(containerRect.right - artworkRect.right),
+        top: Math.abs(containerRect.top - artworkRect.top),
+      },
+      playerPadding: Number.parseFloat(getComputedStyle(player).paddingLeft),
+      playerOverflow: getComputedStyle(player).overflow,
+      playerTransitionDuration: getComputedStyle(player).transitionDuration,
+      revealWidth: reveal.getBoundingClientRect().width,
+      shellOverflow: getComputedStyle(element).overflow,
+      vinylAnimationDuration: getComputedStyle(vinyl).animationDuration,
+      vinylAnimationPlayState: getComputedStyle(vinyl).animationPlayState,
+      vinylOpacity: Number.parseFloat(getComputedStyle(vinyl).opacity),
+    }
+  })
+  expect(collapsedVisual.backgroundColor).toBe('rgba(0, 0, 0, 0)')
+  expect(collapsedVisual.coverBorderRadius).toBe(standardIconRadius)
+  expect(collapsedVisual.artworkOpacity).toBe(1)
+  expect(collapsedVisual.artworkOverflow).toBe('visible')
+  expect(collapsedVisual.artworkShadow).not.toBe('none')
+  expect(collapsedVisual.artworkTransitionProperty).toBe('border-radius')
+  expect(collapsedVisual.artworkTransitionDuration).toBe('0.16s')
+  expect(collapsedVisual.coverOpacity).toBe(1)
+  expect(collapsedVisual.coverTransitionDuration).toBe(collapsedVisual.playerTransitionDuration)
+  expect(collapsedVisual.coverTransitionDuration).toContain('0.16s')
+  expect(collapsedVisual.playerPadding).toBe(0)
+  expect(collapsedVisual.playerOverflow).toBe('visible')
+  expect(collapsedVisual.revealWidth).toBe(0)
+  expect(collapsedVisual.shellOverflow).toBe('visible')
+  expect(collapsedVisual.vinylAnimationDuration).toBe('20s')
+  expect(collapsedVisual.vinylAnimationPlayState).toBe('paused')
+  expect(collapsedVisual.vinylOpacity).toBe(0)
+  expect(Object.values(collapsedVisual.artworkInset).every(value => value < 0.1)).toBe(true)
+
+  await music.hover()
+  await expect(music).toHaveClass(/is-music-expanded/)
+  await page.waitForTimeout(80)
+
+  const midTransition = await music.evaluate((element) => {
+    const artwork = element.querySelector('.music-player__artwork')
+    const content = element.querySelector('.music-player__content')
+    const cover = element.querySelector('.music-player__cover')
+    const player = element.querySelector('.music-player')
+    const reveal = element.querySelector('.music-player__reveal')
+    const rect = element.getBoundingClientRect()
+    const vinyl = element.querySelector('.music-player__vinyl')
+    if (!artwork || !content || !cover || !player || !reveal || !vinyl)
+      throw new Error('Missing Music player layers')
+
+    return {
+      artworkOpacity: Number.parseFloat(getComputedStyle(artwork).opacity),
+      contentFilter: getComputedStyle(content).filter,
+      coverOpacity: Number.parseFloat(getComputedStyle(cover).opacity),
+      coverTransitionDuration: getComputedStyle(cover).transitionDuration,
+      playerPadding: Number.parseFloat(getComputedStyle(player).paddingLeft),
+      revealWidth: Number.parseFloat(getComputedStyle(reveal).width),
+      vinylAnimationPlayState: getComputedStyle(vinyl).animationPlayState,
+      vinylOpacity: Number.parseFloat(getComputedStyle(vinyl).opacity),
+      width: rect.width,
+    }
+  })
+  const shellMidTransition = await dockShell.boundingBox()
+  if (!shellMidTransition)
+    throw new Error('Missing Dock shell during Music transition')
+
+  expect(midTransition.artworkOpacity).toBe(1)
+  expect(midTransition.coverOpacity).toBeGreaterThan(0)
+  expect(midTransition.coverOpacity).toBeLessThan(1)
+  expect(midTransition.coverTransitionDuration).toContain('0.3s')
+  expect(midTransition.playerPadding).toBeGreaterThan(0)
+  expect(midTransition.playerPadding).toBeLessThan(4)
+  expect(midTransition.revealWidth).toBeGreaterThan(0)
+  expect(midTransition.revealWidth).toBeLessThan(36)
+  expect(midTransition.vinylAnimationPlayState).toBe('running')
+  expect(midTransition.vinylOpacity).toBeGreaterThan(0)
+  expect(midTransition.vinylOpacity).toBeLessThan(1)
+  expect(midTransition.contentFilter).not.toBe('none')
+  expect(midTransition.contentFilter).not.toBe('blur(0px)')
+  expect(midTransition.width).toBeGreaterThan(beforeHover.width)
+  expect(shellMidTransition.width).toBeGreaterThan(shellBeforeHover.width)
+
+  await expect.poll(async () => {
+    return music.locator('.music-player__content').evaluate((element) => {
+      return Number.parseFloat(getComputedStyle(element).opacity)
+    })
+  }).toBeGreaterThan(0.99)
+  await expect.poll(async () => {
+    return music.locator('.music-player__vinyl').evaluate((element) => {
+      return Number.parseFloat(getComputedStyle(element).opacity)
+    })
+  }).toBeGreaterThan(0.99)
+
+  const [expanded, shellExpanded] = await Promise.all([
+    music.boundingBox(),
+    dockShell.boundingBox(),
+  ])
+  if (!expanded || !shellExpanded)
+    throw new Error('Missing expanded Music player')
+
+  const expandedLayout = await music.evaluate((element) => {
+    const artwork = element.querySelector('.music-player__artwork')
+    const content = element.querySelector('.music-player__content')
+    const cover = element.querySelector('.music-player__cover')
+    const player = element.querySelector('.music-player')
+    const reveal = element.querySelector('.music-player__reveal')
+    const vinyl = element.querySelector('.music-player__vinyl')
+    if (!artwork || !content || !cover || !player || !reveal || !vinyl)
+      throw new Error('Missing expanded Music layers')
+
+    return {
+      artworkShadow: getComputedStyle(artwork).boxShadow,
+      artworkRadius: getComputedStyle(artwork).borderRadius,
+      contentWidth: Number.parseFloat(getComputedStyle(content).width),
+      coverOpacity: Number.parseFloat(getComputedStyle(cover).opacity),
+      playerPadding: Number.parseFloat(getComputedStyle(player).paddingLeft),
+      revealWidth: Number.parseFloat(getComputedStyle(reveal).width),
+      vinylOpacity: Number.parseFloat(getComputedStyle(vinyl).opacity),
+    }
+  })
+
+  expect(expanded.width).toBeGreaterThan(beforeHover.width * 3.5)
+  expect(expanded.width).toBeGreaterThan(midTransition.width)
+  expect(expanded.height).toBeGreaterThan(beforeHover.height * 1.7)
+  expect(expanded.width / expanded.height).toBeCloseTo(2, 1)
+  expect(shellExpanded.width).toBeGreaterThan(shellMidTransition.width)
+  expect(expandedLayout.contentWidth).toBe(36)
+  expect(expandedLayout.artworkShadow).toBe('none')
+  expect(expandedLayout.artworkRadius).toBe('6px')
+  expect(expandedLayout.coverOpacity).toBeCloseTo(0, 1)
+  expect(expandedLayout.revealWidth).toBeCloseTo(36, 1)
+  expect(expandedLayout.playerPadding).toBeCloseTo(4, 1)
+  expect(expandedLayout.vinylOpacity).toBeCloseTo(1, 1)
+
+  await page.mouse.click(
+    expanded.x + expanded.width * 0.72,
+    expanded.y + expanded.height * 0.5,
+  )
+  await expect(page.getByTestId('mock-window-music')).toHaveCount(0)
+
+  await music.locator('.music-player__artwork').click()
+  const musicWindow = page.getByTestId('mock-window-music')
+  await expect(musicWindow).toBeVisible()
+  await musicWindow.getByRole('button', { name: 'Close window' }).click()
+  await expect(musicWindow).toHaveCount(0)
+})
+
 test('Tweakpane controls update the dock configuration', async ({ page }) => {
   await page.goto('/')
   await waitForDockUpgrade(page, 'dock-wrapper')
@@ -172,6 +362,23 @@ test('Tweakpane controls update the dock configuration', async ({ page }) => {
   await sizeControl.press('Enter')
 
   await expect(page.locator('dock-item').first()).toHaveAttribute('size', '72')
+})
+
+test('package manager icons use square slots without overflowing', async ({ page }) => {
+  await page.goto('/')
+
+  const npmSlot = page.locator('[data-language-icon="npm"]')
+  const npmMark = npmSlot.locator('div')
+  const [slotBox, markBox] = await Promise.all([
+    npmSlot.boundingBox(),
+    npmMark.boundingBox(),
+  ])
+  if (!slotBox || !markBox)
+    throw new Error('Missing NPM language icon')
+
+  expect(slotBox.width).toBeCloseTo(slotBox.height, 1)
+  expect(markBox.width).toBeLessThanOrEqual(slotBox.width + 0.5)
+  expect(markBox.height).toBeLessThanOrEqual(slotBox.height + 0.5)
 })
 
 test('dock hover responds to accumulated one-pixel pointer movements', async ({ page }) => {
@@ -272,6 +479,86 @@ test('custom width page updates reactive item width', async ({ page }) => {
   await expect.poll(async () => {
     return getDockItemWidths(page, '#custom-width-reactive')
   }).toEqual([56, 156, 104])
+})
+
+test('dock item exposes configurable resize timing and easing', async ({ page }) => {
+  await page.goto('/custom-width')
+  await waitForDockUpgrade(page, '#custom-width-reactive')
+
+  const result = await page.locator('#custom-width-reactive dock-item').nth(1).evaluate(async (element) => {
+    const item = element as HTMLElement & {
+      resizeDuration: number
+      resizeEase: string
+      resizeExitDuration: number
+      updateComplete: Promise<unknown>
+      width: number
+    }
+    const visual = item.shadowRoot?.querySelector<HTMLElement>('.dock-item__scale')
+    if (!visual)
+      throw new Error('Missing dock item visual')
+
+    item.setAttribute('resize-duration', '0')
+    item.setAttribute('resize-exit-duration', '0')
+    item.setAttribute('resize-ease', 'linear')
+    await item.updateComplete
+
+    item.width = 156
+    await item.updateComplete
+    await new Promise(resolve => requestAnimationFrame(() => resolve(undefined)))
+    const expandedWidth = Number.parseFloat(visual.style.width)
+
+    item.width = 84
+    await item.updateComplete
+    await new Promise(resolve => requestAnimationFrame(() => resolve(undefined)))
+
+    return {
+      collapsedWidth: Number.parseFloat(visual.style.width),
+      expandedWidth,
+      resizeDuration: item.resizeDuration,
+      resizeEase: item.resizeEase,
+      resizeExitDuration: item.resizeExitDuration,
+    }
+  })
+
+  expect(result).toEqual({
+    collapsedWidth: 84,
+    expandedWidth: 156,
+    resizeDuration: 0,
+    resizeEase: 'linear',
+    resizeExitDuration: 0,
+  })
+})
+
+test('reactive item width preserves the active dock scale', async ({ page }) => {
+  await page.goto('/custom-width')
+  await waitForDockUpgrade(page, '#custom-width-reactive')
+
+  const reactiveItem = page.locator('#custom-width-reactive dock-item').nth(1)
+  const sizes = await reactiveItem.evaluate(async (element) => {
+    const item = element as HTMLElement & {
+      scale: number
+      updateComplete: Promise<unknown>
+      width: number
+    }
+    const shell = item.shadowRoot?.querySelector('li')
+    if (!shell)
+      throw new Error('Missing dock item shell')
+
+    item.scale = 2
+    await new Promise(resolve => setTimeout(resolve, 120))
+    const beforeWidthChange = shell.getBoundingClientRect().width
+
+    item.width = 156
+    await item.updateComplete
+
+    return {
+      afterRender: shell.getBoundingClientRect().width,
+      beforeWidthChange,
+    }
+  })
+
+  expect(sizes.beforeWidthChange).toBeGreaterThan(160)
+  expect(sizes.afterRender).toBeGreaterThanOrEqual(sizes.beforeWidthChange - 1)
 })
 
 test('custom width sortable case preserves mixed item widths', async ({ page }) => {
@@ -664,7 +951,14 @@ test('all macOS dock icons open their own closable mock window', async ({ page }
   await expect(page.locator('[data-app-id]')).toHaveCount(appIds.length)
 
   for (const appId of appIds) {
-    await page.locator(`[data-app-id="${appId}"]`).click()
+    const app = page.locator(`[data-app-id="${appId}"]`)
+    if (appId === 'music') {
+      await app.hover()
+      await app.locator('.music-player__artwork').click()
+    }
+    else {
+      await app.click()
+    }
     const mockWindow = page.locator(`[data-testid="mock-window-${appId}"]`)
     await expect(mockWindow).toBeVisible()
     await mockWindow.getByRole('button', { name: 'Close window' }).click()

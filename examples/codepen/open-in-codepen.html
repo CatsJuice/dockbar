@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Open Dockbar Demo in CodePen</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+      }
+
+      body {
+        display: grid;
+        min-height: 100vh;
+        margin: 0;
+        place-items: center;
+        color: #f7f7fb;
+        background: #17171d;
+      }
+
+      main {
+        width: min(440px, calc(100vw - 40px));
+        padding: 32px;
+        text-align: center;
+        background: #24242c;
+        border: 1px solid #383842;
+        border-radius: 22px;
+        box-shadow: 0 24px 70px rgba(0, 0, 0, 0.35);
+      }
+
+      button {
+        padding: 12px 18px;
+        color: #111218;
+        font: inherit;
+        font-weight: 750;
+        background: #79d6ff;
+        border: 0;
+        border-radius: 999px;
+        cursor: pointer;
+      }
+
+      p {
+        color: #aaaab6;
+        line-height: 1.55;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Dockbar CodePen Demo</h1>
+      <p>
+        This sends the HTML, CSS, and JavaScript to separate CodePen panels and
+        loads dockbar@1.0.0 as ordered external scripts.
+      </p>
+      <button id="open-pen" type="button">Open prefilled CodePen</button>
+      <p id="status" role="status"></p>
+    </main>
+
+    <script type="module">
+      const button = document.querySelector('#open-pen')
+      const status = document.querySelector('#status')
+
+      button.addEventListener('click', async () => {
+        button.disabled = true
+        status.textContent = 'Preparing the three CodePen panels…'
+
+        try {
+          const [html, css, js] = await Promise.all([
+            fetch('./index.html').then(response => response.text()),
+            fetch('./style.css').then(response => response.text()),
+            fetch('./script.js').then(response => response.text()),
+          ])
+          const documentNode = new DOMParser().parseFromString(html, 'text/html')
+          documentNode.querySelector('link[href="./style.css"]')?.remove()
+          documentNode.querySelectorAll('script').forEach(script => script.remove())
+          documentNode.querySelectorAll('body > comment').forEach(comment => comment.remove())
+
+          const form = document.createElement('form')
+          form.action = 'https://codepen.io/cpe/pen/define/'
+          form.method = 'POST'
+          form.target = '_blank'
+
+          const input = document.createElement('input')
+          input.type = 'hidden'
+          input.name = 'data'
+          input.value = JSON.stringify({
+            title: 'Dockbar 1.0.0 — Genie Window Minimize',
+            description: 'A CDN smoke test for dockbar@1.0.0 with draggable mock windows.',
+            html: documentNode.body.innerHTML.trim(),
+            html_pre_processor: 'none',
+            head: '<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">',
+            css,
+            css_pre_processor: 'none',
+            css_prefix: 'autoprefixer',
+            js,
+            js_pre_processor: 'none',
+            js_external: [
+              'https://unpkg.com/dockbar@1.0.0/dockbar.iife.js',
+              'https://unpkg.com/dockbar@1.0.0/dockbar.minimize.iife.js',
+            ].join(';'),
+            layout: 'left',
+          })
+          form.appendChild(input)
+          document.body.appendChild(form)
+          form.submit()
+          form.remove()
+          status.textContent = 'CodePen opened in a new tab.'
+        }
+        catch (error) {
+          console.error(error)
+          status.textContent = 'Could not prepare CodePen. Run this page through a local server.'
+          button.disabled = false
+        }
+      })
+    </script>
+  </body>
+</html>

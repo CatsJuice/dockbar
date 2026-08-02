@@ -94,6 +94,22 @@ Set `width` on an individual `dock-item` when that item should be wider than the
 </dock-wrapper>
 ```
 
+Reactive `width` and `height` changes animate by default. Configure that per item with
+`resize-duration`, `resize-exit-duration`, and `resize-ease`:
+
+```html
+<dock-item
+  width="96"
+  resize-duration="240"
+  resize-exit-duration="160"
+  resize-ease="cubic-bezier(0.22, 1, 0.36, 1)"
+>
+  Search
+</dock-item>
+```
+
+Durations are expressed in milliseconds. Set either duration to `0` to make that direction immediate.
+
 Use `dock-separator` to split a dock into blocks. The separator occupies layout space and follows the wrapper direction, but it is not included in the hover scale effect.
 
 ```html
@@ -281,6 +297,9 @@ There are some problems yet to be solved:
 | `size` | `number` | `40` | The base height of `dock-item` and fallback width in `px`, see [Sizes](#sizes) |
 | `width` | `number` | `size` | Optional per-`dock-item` base width in `px` |
 | `height` | `number` | `size` | Optional per-`dock-item` base height in `px` |
+| `resize-duration` | `number` | `200` | Per-`dock-item` base-size expansion duration in milliseconds |
+| `resize-exit-duration` | `number` | `160` | Per-`dock-item` base-size contraction duration in milliseconds |
+| `resize-ease` | `string` | `cubic-bezier(0.22, 1, 0.36, 1)` | Per-`dock-item` easing used by base width and height transitions |
 | `padding` | `number` | `8` | The padding of `dock-wrapper` in `px`, see [Sizes](#sizes) |
 | `gap` | `number` | `8` | The gap between `dock-item`s in `px`, see [Sizes](#sizes) |
 | `maxScale` | `number` | `2` | The max scale of `dock-item`, see [Sizes](#sizes) |

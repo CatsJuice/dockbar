@@ -150,6 +150,8 @@ const pendingActions = new Map<AppId, Promise<void>>()
 const hasMinimizedWindows = computed(() => apps.some((app) => {
   return ['minimizing', 'minimized', 'restoring'].includes(windowStates[app.id])
 }))
+const musicExpanded = ref(false)
+const musicItemWidth = computed(() => config.size * (musicExpanded.value ? 2 : 1))
 
 let topZIndex = 100
 let unmounting = false
@@ -297,6 +299,48 @@ function closeApp(app: AppDefinition) {
   })
 }
 
+function setMusicHovered(hovered: boolean) {
+  if (hovered && !window.matchMedia('(hover: hover) and (pointer: fine)').matches)
+    return
+
+  musicExpanded.value = hovered
+}
+
+function onDockItemPointerEnter(app: AppDefinition) {
+  if (app.id === 'music')
+    setMusicHovered(true)
+}
+
+function onDockItemPointerLeave(app: AppDefinition) {
+  if (app.id === 'music')
+    setMusicHovered(false)
+}
+
+function onDockAppFocus(app: AppDefinition) {
+  if (app.id !== 'music')
+    return
+
+  musicExpanded.value = true
+}
+
+function onDockAppBlur(app: AppDefinition) {
+  if (app.id !== 'music')
+    return
+
+  musicExpanded.value = false
+}
+
+function getDockAppStyle(app: AppDefinition) {
+  if (app.id !== 'music')
+    return undefined
+
+  return {
+    '--music-collapsed-width': `${config.size}px`,
+    '--music-expanded-width': `${config.size * 2}px`,
+    '--music-height': `${config.size}px`,
+  }
+}
+
 function onWindowStateChange(event: Event) {
   const detail = (event as CustomEvent<DockWindowStateChangeDetail>).detail
   if (!detail || !isAppId(detail.id))
@@ -341,8 +385,73 @@ onBeforeUnmount(() => {
         <dock-item
           v-for="app in apps"
           :key="app.id"
+          :width="app.id === 'music' ? musicItemWidth : undefined"
+          @pointerenter="onDockItemPointerEnter(app)"
+          @pointerleave="onDockItemPointerLeave(app)"
         >
+          <div
+            v-if="app.id === 'music'"
+            class="dock-app is-music"
+            :class="{
+              'is-open': openWindows.music,
+              'is-music-expanded': musicExpanded,
+            }"
+            :style="getDockAppStyle(app)"
+            data-app-id="music"
+            :data-window-state="windowStates.music"
+          >
+            <span class="music-player">
+              <button
+                class="music-player__artwork"
+                type="button"
+                aria-label="Open Music"
+                @click="openApp(app)"
+                @focus="onDockAppFocus(app)"
+                @blur="onDockAppBlur(app)"
+              >
+                <img
+                  class="music-player__cover"
+                  src="/macos-icons/Music.jpg"
+                  alt=""
+                  draggable="false"
+                >
+                <img
+                  class="music-player__vinyl"
+                  src="/lofi/lofi-cd@0.5x.webp"
+                  alt=""
+                  draggable="false"
+                >
+              </button>
+              <span class="music-player__reveal">
+                <span class="music-player__content">
+                  <span class="music-player__copy">
+                    <strong>Dreams</strong>
+                    <small>Fleetwood Mac</small>
+                  </span>
+                  <span class="music-player__progress"><i /></span>
+                  <span class="music-player__controls" aria-hidden="true">
+                    <span>
+                      <svg viewBox="0 0 12 12">
+                        <path d="M2.25 2.4v7.2M9.75 2.5 4.2 6l5.55 3.5z" />
+                      </svg>
+                    </span>
+                    <span class="music-player__play">
+                      <svg viewBox="0 0 12 12">
+                        <path d="m3.8 2.25 5.5 3.75-5.5 3.75z" />
+                      </svg>
+                    </span>
+                    <span>
+                      <svg viewBox="0 0 12 12">
+                        <path d="M9.75 2.4v7.2M2.25 2.5 7.8 6 2.25 9.5z" />
+                      </svg>
+                    </span>
+                  </span>
+                </span>
+              </span>
+            </span>
+          </div>
           <button
+            v-else
             class="dock-app"
             :class="{ 'is-open': openWindows[app.id] }"
             type="button"
@@ -453,7 +562,240 @@ onBeforeUnmount(() => {
   user-select: none;
 }
 
-.dock-app:focus-visible {
+.dock-app.is-music {
+  --music-morph-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --music-morph-duration: 160ms;
+  --music-content-width: 36px;
+  --music-inset: 0px;
+
+  isolation: isolate;
+  width: var(--music-collapsed-width);
+  height: var(--music-height);
+  overflow: visible;
+  background: transparent;
+  border-radius: 10px;
+  box-shadow: none;
+  cursor: default;
+  transition: width var(--music-morph-duration) var(--music-morph-ease);
+  will-change: width;
+}
+
+.dock-app.is-music-expanded {
+  --music-morph-duration: 200ms;
+  --music-inset: 4px;
+
+  width: var(--music-expanded-width);
+}
+
+.music-player {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  display: flex;
+  align-items: stretch;
+  gap: var(--music-inset);
+  padding: var(--music-inset);
+  overflow: visible;
+  color: #211b20;
+  text-align: left;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(235, 231, 236, 0.96));
+  border-radius: inherit;
+  box-shadow:
+    0 3px 8px rgba(38, 30, 36, 0.2),
+    inset 0 0 0 0.5px rgba(255, 255, 255, 0.84);
+  box-sizing: border-box;
+  transition:
+    gap var(--music-morph-duration) var(--music-morph-ease),
+    padding var(--music-morph-duration) var(--music-morph-ease);
+  will-change: gap, padding;
+}
+
+.music-player__artwork {
+  display: grid;
+  flex: 0 0 auto;
+  width: auto;
+  height: auto;
+  aspect-ratio: 1;
+  min-width: 0;
+  padding: 0;
+  overflow: visible;
+  background: transparent;
+  border: 0;
+  border-radius: calc(10px - var(--music-inset));
+  box-shadow: 0 1px 3px rgba(47, 28, 40, 0.28);
+  cursor: pointer;
+  appearance: none;
+  -webkit-tap-highlight-color: transparent;
+  transition: border-radius var(--music-morph-duration) var(--music-morph-ease);
+}
+
+.music-player__artwork img {
+  grid-area: 1 / 1;
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  object-fit: cover;
+  transition:
+    opacity var(--music-morph-duration) ease-in-out,
+    filter var(--music-morph-duration) ease-in-out;
+  will-change: opacity, filter;
+}
+
+.is-music-expanded .music-player__artwork img {
+  transition-duration: 300ms;
+}
+
+.music-player__cover {
+  opacity: 1;
+  filter: blur(0);
+}
+
+.music-player__vinyl {
+  opacity: 0;
+  filter: blur(2px);
+  animation: music-vinyl-spin 20s linear infinite;
+  animation-play-state: paused;
+}
+
+.is-music-expanded .music-player__artwork {
+  box-shadow: none;
+}
+
+.is-music-expanded .music-player__cover {
+  opacity: 0;
+  filter: blur(2px);
+}
+
+.is-music-expanded .music-player__vinyl {
+  opacity: 1;
+  filter: blur(0);
+  animation-play-state: running;
+}
+
+@keyframes music-vinyl-spin {
+  to {
+    transform: rotate(1turn);
+  }
+}
+
+.music-player__reveal {
+  display: block;
+  flex: 1 1 0;
+  width: 0;
+  min-width: 0;
+  height: 100%;
+  overflow: hidden;
+}
+
+.music-player__content {
+  display: grid;
+  width: var(--music-content-width);
+  height: 100%;
+  padding: 1px 1px 0 0;
+  align-content: center;
+  opacity: 0;
+  filter: blur(2px);
+  transition:
+    opacity 160ms ease-in-out,
+    filter 160ms ease-in-out;
+  will-change: opacity, filter;
+}
+
+.is-music-expanded .music-player__content {
+  opacity: 1;
+  filter: blur(0);
+  transition-delay: 20ms;
+}
+
+.music-player__copy {
+  display: grid;
+  min-width: 0;
+  line-height: 1.05;
+}
+
+.music-player__copy strong,
+.music-player__copy small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.music-player__copy strong {
+  font-size: 5.5px;
+  font-weight: 680;
+  letter-spacing: -0.08px;
+}
+
+.music-player__copy small {
+  margin-top: 1px;
+  color: rgba(55, 45, 52, 0.62);
+  font-size: 4px;
+  font-weight: 500;
+}
+
+.music-player__progress {
+  position: relative;
+  display: block;
+  height: 1.5px;
+  margin-top: 3px;
+  overflow: hidden;
+  background: rgba(59, 48, 56, 0.15);
+  border-radius: 999px;
+}
+
+.music-player__progress i {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 42%;
+  background: #e34f76;
+  border-radius: inherit;
+}
+
+.music-player__controls {
+  display: flex;
+  height: 9px;
+  margin-top: 2px;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+}
+
+.music-player__controls > span {
+  display: grid;
+  width: 7px;
+  height: 7px;
+  color: #282128;
+  place-items: center;
+}
+
+.music-player__controls .music-player__play {
+  width: 9px;
+  height: 9px;
+  color: white;
+  background: #29232a;
+  border-radius: 50%;
+}
+
+.music-player__controls .music-player__play svg {
+  width: 58%;
+  height: 58%;
+}
+
+.music-player__controls svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  fill: currentcolor;
+  stroke: currentcolor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.15;
+}
+
+.dock-app:focus-visible,
+.music-player__artwork:focus-visible {
   outline: 2px solid #147ce5;
   outline-offset: 2px;
 }
@@ -500,5 +842,24 @@ dock-minimize-area::part(thumbnail) {
   box-shadow:
     0 1px 2px rgba(0, 0, 0, 0.32),
     inset 0 0 0 0.5px rgba(255, 255, 255, 0.45);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dock-app.is-music,
+  .music-player,
+  .music-player__artwork,
+  .music-player__artwork img,
+  .music-player__content {
+    transition: none;
+  }
+
+  .music-player__vinyl {
+    animation: none;
+  }
+
+  .music-player__content,
+  .is-music-expanded .music-player__content {
+    filter: none;
+  }
 }
 </style>
