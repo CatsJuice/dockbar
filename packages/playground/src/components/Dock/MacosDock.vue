@@ -556,10 +556,18 @@ onBeforeUnmount(() => {
   display: block;
   width: 100%;
   height: 100%;
-  overflow: hidden;
   border-radius: inherit;
   object-fit: cover;
   user-select: none;
+}
+
+.dock-app > img {
+  overflow: hidden;
+}
+
+.lofi-icon {
+  /* Let the hovering record and floating notes extend beyond the icon. */
+  overflow: visible;
 }
 
 .dock-app.is-music {
